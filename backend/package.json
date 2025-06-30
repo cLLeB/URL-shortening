@@ -65,28 +65,5 @@
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "collectCoverageFrom": [
-      "src/**/*.js",
-      "!src/server.js",
-      "!src/database/migrate.js",
-      "!src/database/seed.js"
-    ],
-    "coverageDirectory": "coverage",
-    "coverageReporters": [
-      "text",
-      "lcov",
-      "html"
-    ],
-    "coverageThreshold": {
-      "global": {
-        "branches": 80,
-        "functions": 80,
-        "lines": 80,
-        "statements": 80
-      }
-    }
   }
 }

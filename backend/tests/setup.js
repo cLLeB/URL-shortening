@@ -1,5 +1,5 @@
 const { Pool } = require('pg');
-const Redis = require('ioredis');
+const { createClient } = require('redis');
 
 // Test database configuration
 const testDbConfig = {
@@ -33,7 +33,15 @@ beforeAll(async () => {
   testDb = new Pool(testDbConfig);
   
   // Initialize test Redis connection
-  testRedis = new Redis(testRedisConfig);
+  testRedis = createClient({
+    socket: {
+      host: testRedisConfig.host,
+      port: testRedisConfig.port,
+    },
+    password: testRedisConfig.password || undefined,
+    database: testRedisConfig.db,
+  });
+  await testRedis.connect();
   
   // Create test database schema
   await setupTestDatabase();
@@ -45,7 +53,7 @@ afterAll(async () => {
     await testDb.end();
   }
   if (testRedis) {
-    await testRedis.quit();
+    await testRedis.disconnect();
   }
 });
 
@@ -55,7 +63,7 @@ beforeEach(async () => {
   await testDb.query('TRUNCATE TABLE url_clicks, urls, user_sessions, users RESTART IDENTITY CASCADE');
   
   // Clear Redis
-  await testRedis.flushdb();
+  await testRedis.flushDb();
 });
 
 // Setup test database schema
