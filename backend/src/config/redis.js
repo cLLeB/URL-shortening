@@ -14,7 +14,7 @@ const redisConfig = {
   lazyConnect: true,
   keepAlive: 30000,
   connectTimeout: 10000,
-  commandTimeout: 5000
+  commandTimeout: 5000,
 };
 
 async function connectRedis() {
@@ -25,11 +25,11 @@ async function connectRedis() {
         port: redisConfig.port,
         connectTimeout: redisConfig.connectTimeout,
         commandTimeout: redisConfig.commandTimeout,
-        keepAlive: redisConfig.keepAlive
+        keepAlive: redisConfig.keepAlive,
       },
       password: redisConfig.password,
       database: redisConfig.db,
-      retryDelayOnFailover: redisConfig.retryDelayOnFailover
+      retryDelayOnFailover: redisConfig.retryDelayOnFailover,
     });
 
     // Error handling
@@ -54,11 +54,11 @@ async function connectRedis() {
     });
 
     await client.connect();
-    
+
     // Test the connection
     await client.ping();
     logger.info('Redis connection established successfully');
-    
+
     return client;
   } catch (error) {
     logger.error('Failed to connect to Redis:', error);
@@ -215,17 +215,17 @@ async function checkRedisHealth() {
     const start = Date.now();
     await client.ping();
     const responseTime = Date.now() - start;
-    
+
     return {
       status: 'healthy',
       responseTime: `${responseTime}ms`,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   } catch (error) {
     return {
       status: 'unhealthy',
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }
@@ -254,5 +254,5 @@ module.exports = {
   lrange,
   get client() {
     return client;
-  }
+  },
 };

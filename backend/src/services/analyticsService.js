@@ -22,7 +22,7 @@ class AnalyticsService {
       let geoData = {
         country: null,
         region: null,
-        city: null
+        city: null,
       };
 
       if (this.enableGeolocation && ipAddress && ipAddress !== '127.0.0.1' && ipAddress !== '::1') {
@@ -31,22 +31,22 @@ class AnalyticsService {
           geoData = {
             country: geo.country,
             region: geo.region,
-            city: geo.city
+            city: geo.city,
           };
         }
       }
 
       // Parse user agent data
-      let deviceData = {
+      const deviceData = {
         deviceType: 'unknown',
         browser: 'unknown',
         os: 'unknown',
-        isBot: false
+        isBot: false,
       };
 
       if (this.enableUserAgentParsing && userAgent) {
         const agent = useragent.parse(userAgent);
-        
+
         // Detect device type
         deviceData.deviceType = this.detectDeviceType(userAgent);
         deviceData.browser = agent.family || 'unknown';
@@ -72,7 +72,7 @@ class AnalyticsService {
         deviceData.deviceType,
         deviceData.browser,
         deviceData.os,
-        deviceData.isBot
+        deviceData.isBot,
       ]);
 
       const clickId = result.rows[0].id;
@@ -84,7 +84,7 @@ class AnalyticsService {
         country: geoData.country,
         deviceType: deviceData.deviceType,
         browser: deviceData.browser,
-        isBot: deviceData.isBot
+        isBot: deviceData.isBot,
       });
 
       return clickId;
@@ -98,7 +98,7 @@ class AnalyticsService {
   // Detect device type from user agent
   detectDeviceType(userAgent) {
     const ua = userAgent.toLowerCase();
-    
+
     if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
       return 'mobile';
     }
@@ -116,9 +116,9 @@ class AnalyticsService {
     const botPatterns = [
       'bot', 'crawler', 'spider', 'scraper', 'curl', 'wget', 'python',
       'googlebot', 'bingbot', 'slurp', 'duckduckbot', 'baiduspider',
-      'yandexbot', 'facebookexternalhit', 'twitterbot', 'linkedinbot'
+      'yandexbot', 'facebookexternalhit', 'twitterbot', 'linkedinbot',
     ];
-    
+
     const ua = userAgent.toLowerCase();
     return botPatterns.some(pattern => ua.includes(pattern));
   }
@@ -130,9 +130,9 @@ class AnalyticsService {
       if (userId) {
         const urlCheck = await query(
           'SELECT id FROM urls WHERE id = $1 AND (user_id = $2 OR is_public = true)',
-          [urlId, userId]
+          [urlId, userId],
         );
-        
+
         if (urlCheck.rows.length === 0) {
           throw new AppError('URL not found or access denied', 404);
         }
@@ -140,7 +140,7 @@ class AnalyticsService {
 
       // Calculate date range
       const dateRange = this.calculateDateRange(timeRange);
-      
+
       // Try cache first
       const cacheKey = `analytics:${urlId}:${timeRange}`;
       const cached = await get(cacheKey);
@@ -170,7 +170,7 @@ class AnalyticsService {
         this.getClicksByDevice(urlId, dateRange),
         this.getClicksByBrowser(urlId, dateRange),
         this.getClicksByReferer(urlId, dateRange),
-        this.getRecentClicks(urlId, 10)
+        this.getRecentClicks(urlId, 10),
       ]);
 
       const result = {
@@ -181,7 +181,7 @@ class AnalyticsService {
           title: url.title,
           totalClicks: url.click_count,
           createdAt: url.created_at,
-          lastAccessed: url.last_accessed
+          lastAccessed: url.last_accessed,
         },
         timeRange,
         dateRange,
@@ -196,8 +196,8 @@ class AnalyticsService {
           uniqueCountries: analytics[1].length,
           uniqueDevices: analytics[2].length,
           uniqueBrowsers: analytics[3].length,
-          botClicks: analytics[5].filter(click => click.isBot).length
-        }
+          botClicks: analytics[5].filter(click => click.isBot).length,
+        },
       };
 
       // Cache for 5 minutes
@@ -231,7 +231,7 @@ class AnalyticsService {
       return result.rows.map(row => ({
         date: row.date,
         clicks: parseInt(row.clicks),
-        uniqueClicks: parseInt(row.unique_clicks)
+        uniqueClicks: parseInt(row.unique_clicks),
       }));
     } catch (error) {
       logger.error('Error getting clicks by date:', error);
@@ -261,7 +261,7 @@ class AnalyticsService {
       return result.rows.map(row => ({
         country: row.country,
         clicks: parseInt(row.clicks),
-        uniqueClicks: parseInt(row.unique_clicks)
+        uniqueClicks: parseInt(row.unique_clicks),
       }));
     } catch (error) {
       logger.error('Error getting clicks by country:', error);
@@ -289,7 +289,7 @@ class AnalyticsService {
       return result.rows.map(row => ({
         deviceType: row.device_type,
         clicks: parseInt(row.clicks),
-        uniqueClicks: parseInt(row.unique_clicks)
+        uniqueClicks: parseInt(row.unique_clicks),
       }));
     } catch (error) {
       logger.error('Error getting clicks by device:', error);
@@ -318,7 +318,7 @@ class AnalyticsService {
       return result.rows.map(row => ({
         browser: row.browser,
         clicks: parseInt(row.clicks),
-        uniqueClicks: parseInt(row.unique_clicks)
+        uniqueClicks: parseInt(row.unique_clicks),
       }));
     } catch (error) {
       logger.error('Error getting clicks by browser:', error);
@@ -348,7 +348,7 @@ class AnalyticsService {
 
       return result.rows.map(row => ({
         referer: row.referer,
-        clicks: parseInt(row.clicks)
+        clicks: parseInt(row.clicks),
       }));
     } catch (error) {
       logger.error('Error getting clicks by referer:', error);
@@ -378,7 +378,7 @@ class AnalyticsService {
         browser: row.browser,
         os: row.os,
         referer: row.referer,
-        isBot: row.is_bot
+        isBot: row.is_bot,
       }));
     } catch (error) {
       logger.error('Error getting recent clicks:', error);
@@ -392,28 +392,28 @@ class AnalyticsService {
     const start = new Date();
 
     switch (timeRange) {
-      case '24h':
-        start.setHours(start.getHours() - 24);
-        break;
-      case '7d':
-        start.setDate(start.getDate() - 7);
-        break;
-      case '30d':
-        start.setDate(start.getDate() - 30);
-        break;
-      case '90d':
-        start.setDate(start.getDate() - 90);
-        break;
-      case '1y':
-        start.setFullYear(start.getFullYear() - 1);
-        break;
-      default:
-        start.setDate(start.getDate() - 30);
+    case '24h':
+      start.setHours(start.getHours() - 24);
+      break;
+    case '7d':
+      start.setDate(start.getDate() - 7);
+      break;
+    case '30d':
+      start.setDate(start.getDate() - 30);
+      break;
+    case '90d':
+      start.setDate(start.getDate() - 90);
+      break;
+    case '1y':
+      start.setFullYear(start.getFullYear() - 1);
+      break;
+    default:
+      start.setDate(start.getDate() - 30);
     }
 
     return {
       start: start.toISOString(),
-      end: end.toISOString()
+      end: end.toISOString(),
     };
   }
 
@@ -421,7 +421,7 @@ class AnalyticsService {
   async getUserAnalytics(userId, timeRange = '30d') {
     try {
       const dateRange = this.calculateDateRange(timeRange);
-      
+
       const result = await query(`
         SELECT 
           COUNT(DISTINCT u.id) as total_urls,
@@ -446,7 +446,7 @@ class AnalyticsService {
         uniqueCountries: parseInt(stats.unique_countries) || 0,
         uniqueVisitors: parseInt(stats.unique_visitors) || 0,
         timeRange,
-        dateRange
+        dateRange,
       };
     } catch (error) {
       logger.error('Error getting user analytics:', error);

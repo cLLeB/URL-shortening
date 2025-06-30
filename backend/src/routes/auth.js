@@ -14,24 +14,24 @@ const registerSchema = Joi.object({
     .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]'))
     .message('Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character'),
   firstName: Joi.string().max(100).optional(),
-  lastName: Joi.string().max(100).optional()
+  lastName: Joi.string().max(100).optional(),
 });
 
 const loginSchema = Joi.object({
   email: Joi.string().email().required(),
-  password: Joi.string().required()
+  password: Joi.string().required(),
 });
 
 const changePasswordSchema = Joi.object({
   currentPassword: Joi.string().required(),
   newPassword: Joi.string().min(8).max(128).required()
     .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]'))
-    .message('Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character')
+    .message('Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character'),
 });
 
 const updateProfileSchema = Joi.object({
   firstName: Joi.string().max(100).optional(),
-  lastName: Joi.string().max(100).optional()
+  lastName: Joi.string().max(100).optional(),
 });
 
 /**
@@ -120,7 +120,7 @@ router.post('/register', authLimiter, asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       message: 'Validation error',
-      errors: error.details.map(detail => detail.message)
+      errors: error.details.map(detail => detail.message),
     });
   }
 
@@ -130,7 +130,7 @@ router.post('/register', authLimiter, asyncHandler(async (req, res) => {
     success: true,
     message: 'User registered successfully',
     user: result.user,
-    tokens: result.tokens
+    tokens: result.tokens,
   });
 }));
 
@@ -174,7 +174,7 @@ router.post('/login', authLimiter, asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       message: 'Validation error',
-      errors: error.details.map(detail => detail.message)
+      errors: error.details.map(detail => detail.message),
     });
   }
 
@@ -185,7 +185,7 @@ router.post('/login', authLimiter, asyncHandler(async (req, res) => {
     success: true,
     message: 'Login successful',
     user: result.user,
-    tokens: result.tokens
+    tokens: result.tokens,
   });
 }));
 
@@ -222,7 +222,7 @@ router.post('/refresh', asyncHandler(async (req, res) => {
   if (!refreshToken) {
     return res.status(400).json({
       success: false,
-      message: 'Refresh token is required'
+      message: 'Refresh token is required',
     });
   }
 
@@ -232,7 +232,7 @@ router.post('/refresh', asyncHandler(async (req, res) => {
     success: true,
     message: 'Token refreshed successfully',
     user: result.user,
-    tokens: result.tokens
+    tokens: result.tokens,
   });
 }));
 
@@ -258,12 +258,12 @@ router.post('/refresh', asyncHandler(async (req, res) => {
  */
 router.post('/logout', authenticateToken, asyncHandler(async (req, res) => {
   const { refreshToken } = req.body;
-  
+
   await authService.logout(refreshToken);
 
   res.json({
     success: true,
-    message: 'Logout successful'
+    message: 'Logout successful',
   });
 }));
 
@@ -293,7 +293,7 @@ router.get('/profile', authenticateToken, asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    user
+    user,
   });
 }));
 
@@ -327,7 +327,7 @@ router.put('/profile', authenticateToken, asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       message: 'Validation error',
-      errors: error.details.map(detail => detail.message)
+      errors: error.details.map(detail => detail.message),
     });
   }
 
@@ -336,7 +336,7 @@ router.put('/profile', authenticateToken, asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: 'Profile updated successfully',
-    user
+    user,
   });
 }));
 
@@ -376,7 +376,7 @@ router.post('/change-password', authenticateToken, asyncHandler(async (req, res)
     return res.status(400).json({
       success: false,
       message: 'Validation error',
-      errors: error.details.map(detail => detail.message)
+      errors: error.details.map(detail => detail.message),
     });
   }
 
@@ -385,7 +385,7 @@ router.post('/change-password', authenticateToken, asyncHandler(async (req, res)
 
   res.json({
     success: true,
-    message: 'Password changed successfully'
+    message: 'Password changed successfully',
   });
 }));
 

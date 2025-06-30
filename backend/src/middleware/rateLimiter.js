@@ -12,14 +12,14 @@ const createRedisStore = (keyPrefix = 'rl') => {
         const current = await incr(fullKey, 900); // 15 minutes TTL
         return {
           totalHits: current,
-          resetTime: new Date(Date.now() + 900000) // 15 minutes from now
+          resetTime: new Date(Date.now() + 900000), // 15 minutes from now
         };
       } catch (error) {
         logger.error('Redis rate limiter error:', error);
         // Fallback to allowing the request if Redis fails
         return {
           totalHits: 1,
-          resetTime: new Date(Date.now() + 900000)
+          resetTime: new Date(Date.now() + 900000),
         };
       }
     },
@@ -35,7 +35,7 @@ const createRedisStore = (keyPrefix = 'rl') => {
       } catch (error) {
         logger.error('Redis rate limiter reset error:', error);
       }
-    }
+    },
   };
 };
 
@@ -46,7 +46,7 @@ const generalLimiter = rateLimit({
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again later.',
-    retryAfter: Math.ceil((parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000) / 1000)
+    retryAfter: Math.ceil((parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000) / 1000),
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
@@ -66,9 +66,9 @@ const generalLimiter = rateLimit({
       userAgent: req.get('User-Agent'),
       endpoint: req.originalUrl,
       limit: options.max,
-      windowMs: options.windowMs
+      windowMs: options.windowMs,
     });
-  }
+  },
 });
 
 // Strict rate limiter for authentication endpoints
@@ -78,7 +78,7 @@ const authLimiter = rateLimit({
   message: {
     success: false,
     message: 'Too many authentication attempts, please try again later.',
-    retryAfter: 900 // 15 minutes
+    retryAfter: 900, // 15 minutes
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -89,9 +89,9 @@ const authLimiter = rateLimit({
       ip: req.ip,
       userAgent: req.get('User-Agent'),
       endpoint: req.originalUrl,
-      body: req.body?.email ? { email: req.body.email } : undefined
+      body: req.body?.email ? { email: req.body.email } : undefined,
     });
-  }
+  },
 });
 
 // URL creation rate limiter
@@ -107,7 +107,7 @@ const urlCreationLimiter = rateLimit({
   message: {
     success: false,
     message: 'URL creation limit exceeded. Please upgrade your account or try again later.',
-    retryAfter: 3600
+    retryAfter: 3600,
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -117,7 +117,7 @@ const urlCreationLimiter = rateLimit({
   },
   skip: (req) => {
     return req.user && req.user.role === 'admin';
-  }
+  },
 });
 
 // Slow down middleware for repeated requests
@@ -132,7 +132,7 @@ const speedLimiter = slowDown({
   },
   skip: (req) => {
     return req.user && req.user.role === 'admin';
-  }
+  },
 });
 
 // Custom rate limiter for URL redirects
@@ -141,25 +141,25 @@ const redirectLimiter = async (req, res, next) => {
     const shortCode = req.params.shortCode;
     const clientKey = req.user ? `redirect:user:${req.user.id}` : `redirect:ip:${req.ip}`;
     const urlKey = `redirect:url:${shortCode}:${req.ip}`;
-    
+
     // Check general redirect rate (per IP/user)
     const clientCount = await incr(clientKey, 3600); // 1 hour window
     if (clientCount > 1000) { // 1000 redirects per hour per client
       return res.status(429).json({
         success: false,
-        message: 'Too many redirects, please try again later.'
+        message: 'Too many redirects, please try again later.',
       });
     }
-    
+
     // Check specific URL redirect rate (prevent spam clicking)
     const urlCount = await incr(urlKey, 60); // 1 minute window
     if (urlCount > 10) { // 10 redirects per minute per URL per IP
       return res.status(429).json({
         success: false,
-        message: 'Too many redirects for this URL, please wait a moment.'
+        message: 'Too many redirects for this URL, please wait a moment.',
       });
     }
-    
+
     next();
   } catch (error) {
     logger.error('Redirect rate limiter error:', error);
@@ -172,61 +172,61 @@ const redirectLimiter = async (req, res, next) => {
 const apiKeyLimiter = async (req, res, next) => {
   try {
     const apiKey = req.headers['x-api-key'];
-    
+
     if (!apiKey) {
       return next();
     }
-    
+
     // Get API key details from database
     const { query } = require('../database/connection');
     const result = await query(
       'SELECT id, user_id, rate_limit, is_active FROM api_keys WHERE key_hash = $1',
-      [require('crypto').createHash('sha256').update(apiKey).digest('hex')]
+      [require('crypto').createHash('sha256').update(apiKey).digest('hex')],
     );
-    
+
     if (result.rows.length === 0 || !result.rows[0].is_active) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid API key'
+        message: 'Invalid API key',
       });
     }
-    
+
     const keyData = result.rows[0];
     const keyRateLimit = keyData.rate_limit || 1000;
-    
+
     // Check rate limit
     const keyLimitKey = `api_key:${keyData.id}`;
     const currentCount = await incr(keyLimitKey, 3600); // 1 hour window
-    
+
     if (currentCount > keyRateLimit) {
       return res.status(429).json({
         success: false,
         message: 'API key rate limit exceeded',
         limit: keyRateLimit,
-        resetTime: new Date(Date.now() + 3600000).toISOString()
+        resetTime: new Date(Date.now() + 3600000).toISOString(),
       });
     }
-    
+
     // Update last used timestamp
     await query(
       'UPDATE api_keys SET last_used = CURRENT_TIMESTAMP WHERE id = $1',
-      [keyData.id]
+      [keyData.id],
     );
-    
+
     // Attach API key info to request
     req.apiKey = {
       id: keyData.id,
       userId: keyData.user_id,
       rateLimit: keyRateLimit,
-      currentUsage: currentCount
+      currentUsage: currentCount,
     };
-    
+
     next();
   } catch (error) {
     logger.error('API key rate limiter error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Rate limiting check failed'
+      message: 'Rate limiting check failed',
     });
   }
 };
@@ -237,42 +237,42 @@ const urlQuotaCheck = async (req, res, next) => {
     if (!req.user) {
       return next(); // Anonymous users handled by rate limiter
     }
-    
+
     const { query } = require('../database/connection');
-    
+
     // Get user's current URL count
     const result = await query(
       'SELECT COUNT(*) as url_count FROM urls WHERE user_id = $1 AND is_active = true',
-      [req.user.id]
+      [req.user.id],
     );
-    
+
     const currentCount = parseInt(result.rows[0].url_count);
-    
+
     // Define quotas based on user role
     const quotas = {
       user: 100,
       premium: 10000,
-      admin: Infinity
+      admin: Infinity,
     };
-    
+
     const userQuota = quotas[req.user.role] || quotas.user;
-    
+
     if (currentCount >= userQuota) {
       return res.status(403).json({
         success: false,
         message: 'URL creation quota exceeded. Please upgrade your account or delete some URLs.',
         quota: userQuota,
-        current: currentCount
+        current: currentCount,
       });
     }
-    
+
     // Add quota info to request
     req.quota = {
       current: currentCount,
       limit: userQuota,
-      remaining: userQuota - currentCount
+      remaining: userQuota - currentCount,
     };
-    
+
     next();
   } catch (error) {
     logger.error('URL quota check error:', error);
@@ -288,5 +288,5 @@ module.exports = {
   speedLimiter,
   redirectLimiter,
   apiKeyLimiter,
-  urlQuotaCheck
+  urlQuotaCheck,
 };

@@ -8,7 +8,7 @@ const router = express.Router();
 
 // Validation schemas
 const timeRangeSchema = Joi.object({
-  timeRange: Joi.string().valid('24h', '7d', '30d', '90d', '1y').default('30d')
+  timeRange: Joi.string().valid('24h', '7d', '30d', '90d', '1y').default('30d'),
 });
 
 /**
@@ -132,7 +132,7 @@ router.get('/overview', authenticateToken, asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       message: 'Validation error',
-      errors: error.details.map(detail => detail.message)
+      errors: error.details.map(detail => detail.message),
     });
   }
 
@@ -140,7 +140,7 @@ router.get('/overview', authenticateToken, asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    analytics
+    analytics,
   });
 }));
 
@@ -189,7 +189,7 @@ router.get('/urls/:urlId', authenticateToken, asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       message: 'Validation error',
-      errors: error.details.map(detail => detail.message)
+      errors: error.details.map(detail => detail.message),
     });
   }
 
@@ -197,7 +197,7 @@ router.get('/urls/:urlId', authenticateToken, asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    analytics
+    analytics,
   });
 }));
 
@@ -266,13 +266,13 @@ router.get('/urls/:urlId/clicks', authenticateToken, asyncHandler(async (req, re
   const { query } = require('../database/connection');
   const urlCheck = await query(
     'SELECT id FROM urls WHERE id = $1 AND user_id = $2',
-    [urlId, req.user.id]
+    [urlId, req.user.id],
   );
 
   if (urlCheck.rows.length === 0) {
     return res.status(404).json({
       success: false,
-      message: 'URL not found or access denied'
+      message: 'URL not found or access denied',
     });
   }
 
@@ -280,7 +280,7 @@ router.get('/urls/:urlId/clicks', authenticateToken, asyncHandler(async (req, re
 
   res.json({
     success: true,
-    clicks
+    clicks,
   });
 }));
 
@@ -325,7 +325,7 @@ router.get('/export/:urlId', authenticateToken, asyncHandler(async (req, res) =>
   if (!['json', 'csv'].includes(format)) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid format. Supported formats: json, csv'
+      message: 'Invalid format. Supported formats: json, csv',
     });
   }
 
@@ -338,8 +338,8 @@ router.get('/export/:urlId', authenticateToken, asyncHandler(async (req, res) =>
       ...analytics.clicksByDate.map(item => [
         item.date,
         item.clicks,
-        item.uniqueClicks
-      ])
+        item.uniqueClicks,
+      ]),
     ];
 
     const csvContent = csvData.map(row => row.join(',')).join('\n');
@@ -354,7 +354,7 @@ router.get('/export/:urlId', authenticateToken, asyncHandler(async (req, res) =>
     res.json({
       success: true,
       analytics,
-      exportedAt: new Date().toISOString()
+      exportedAt: new Date().toISOString(),
     });
   }
 }));
@@ -392,10 +392,10 @@ router.get('/export/:urlId', authenticateToken, asyncHandler(async (req, res) =>
  *         description: Top URLs retrieved successfully
  */
 router.get('/top-urls', authenticateToken, asyncHandler(async (req, res) => {
-  const { 
-    limit = 10, 
-    sortBy = 'clicks', 
-    timeRange = '30d' 
+  const {
+    limit = 10,
+    sortBy = 'clicks',
+    timeRange = '30d',
   } = req.query;
 
   // Validate parameters
@@ -403,7 +403,7 @@ router.get('/top-urls', authenticateToken, asyncHandler(async (req, res) => {
   if (!validSortBy.includes(sortBy)) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid sortBy parameter'
+      message: 'Invalid sortBy parameter',
     });
   }
 
@@ -413,17 +413,17 @@ router.get('/top-urls', authenticateToken, asyncHandler(async (req, res) => {
   const dateRange = analyticsService.calculateDateRange(timeRange);
 
   const { query } = require('../database/connection');
-  
+
   let orderByClause;
   switch (sortBy) {
-    case 'unique_clicks':
-      orderByClause = 'unique_clicks DESC';
-      break;
-    case 'recent_activity':
-      orderByClause = 'last_accessed DESC NULLS LAST';
-      break;
-    default:
-      orderByClause = 'total_clicks DESC';
+  case 'unique_clicks':
+    orderByClause = 'unique_clicks DESC';
+    break;
+  case 'recent_activity':
+    orderByClause = 'last_accessed DESC NULLS LAST';
+    break;
+  default:
+    orderByClause = 'total_clicks DESC';
   }
 
   const result = await query(`
@@ -457,7 +457,7 @@ router.get('/top-urls', authenticateToken, asyncHandler(async (req, res) => {
     totalClicks: parseInt(row.total_clicks),
     clicksInRange: parseInt(row.clicks_in_range),
     uniqueClicks: parseInt(row.unique_clicks),
-    lastAccessed: row.last_accessed
+    lastAccessed: row.last_accessed,
   }));
 
   res.json({
@@ -465,7 +465,7 @@ router.get('/top-urls', authenticateToken, asyncHandler(async (req, res) => {
     topUrls,
     timeRange,
     sortBy,
-    limit: limitNum
+    limit: limitNum,
   });
 }));
 

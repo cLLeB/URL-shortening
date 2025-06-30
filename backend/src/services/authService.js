@@ -21,7 +21,7 @@ class AuthService {
       // Check if user already exists
       const existingUser = await query(
         'SELECT id FROM users WHERE email = $1',
-        [email.toLowerCase()]
+        [email.toLowerCase()],
       );
 
       if (existingUser.rows.length > 0) {
@@ -42,7 +42,7 @@ class AuthService {
         firstName || null,
         lastName || null,
         false, // Email verification required
-        true
+        true,
       ]);
 
       const user = result.rows[0];
@@ -55,7 +55,7 @@ class AuthService {
 
       logger.logBusinessEvent('User registered', {
         userId: user.id,
-        email: user.email
+        email: user.email,
       });
 
       return {
@@ -66,9 +66,9 @@ class AuthService {
           lastName: user.last_name,
           role: user.role,
           isVerified: user.is_verified,
-          createdAt: user.created_at
+          createdAt: user.created_at,
         },
-        tokens
+        tokens,
       };
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -88,7 +88,7 @@ class AuthService {
       // Get user
       const result = await query(
         'SELECT id, email, password_hash, first_name, last_name, role, is_verified, is_active FROM users WHERE email = $1',
-        [normalizedEmail]
+        [normalizedEmail],
       );
 
       if (result.rows.length === 0) {
@@ -122,13 +122,13 @@ class AuthService {
       // Update last login
       await query(
         'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
-        [user.id]
+        [user.id],
       );
 
       logger.logBusinessEvent('User logged in', {
         userId: user.id,
         email: user.email,
-        ipAddress
+        ipAddress,
       });
 
       return {
@@ -138,9 +138,9 @@ class AuthService {
           firstName: user.first_name,
           lastName: user.last_name,
           role: user.role,
-          isVerified: user.is_verified
+          isVerified: user.is_verified,
         },
-        tokens
+        tokens,
       };
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -154,7 +154,7 @@ class AuthService {
     try {
       // Verify refresh token
       const decoded = verifyRefreshToken(refreshToken);
-      
+
       if (decoded.type !== 'refresh') {
         throw new AppError('Invalid refresh token', 401);
       }
@@ -187,7 +187,7 @@ class AuthService {
         // Invalidate old refresh token
         await client.query(
           'UPDATE user_sessions SET is_active = false WHERE refresh_token_hash = $1',
-          [tokenHash]
+          [tokenHash],
         );
 
         // Store new refresh token
@@ -200,13 +200,13 @@ class AuthService {
           newTokenHash,
           ipAddress,
           userAgent,
-          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         ]);
       });
 
       logger.logBusinessEvent('Token refreshed', {
         userId: user.user_id,
-        ipAddress
+        ipAddress,
       });
 
       return {
@@ -216,9 +216,9 @@ class AuthService {
           firstName: user.first_name,
           lastName: user.last_name,
           role: user.role,
-          isVerified: user.is_verified
+          isVerified: user.is_verified,
         },
-        tokens
+        tokens,
       };
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -238,11 +238,11 @@ class AuthService {
       }
 
       const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-      
+
       // Invalidate refresh token
       await query(
         'UPDATE user_sessions SET is_active = false WHERE refresh_token_hash = $1',
-        [tokenHash]
+        [tokenHash],
       );
 
       return true;
@@ -280,7 +280,7 @@ class AuthService {
         if (timeRemaining > 0) {
           throw new AppError(
             `Account temporarily locked due to too many failed login attempts. Try again in ${Math.ceil(timeRemaining / 60)} minutes.`,
-            429
+            429,
           );
         } else {
           // Lockout expired, clear it
@@ -305,11 +305,11 @@ class AuthService {
 
       if (lockoutData.attempts >= this.maxLoginAttempts) {
         lockoutData.lockedUntil = Date.now() + (this.lockoutDuration * 1000);
-        
+
         logger.logSecurityEvent('Account locked due to failed login attempts', {
           email,
           ipAddress,
-          attempts: lockoutData.attempts
+          attempts: lockoutData.attempts,
         });
       }
 
@@ -335,7 +335,7 @@ class AuthService {
       // Get current password hash
       const result = await query(
         'SELECT password_hash FROM users WHERE id = $1',
-        [userId]
+        [userId],
       );
 
       if (result.rows.length === 0) {
@@ -356,17 +356,17 @@ class AuthService {
       // Update password
       await query(
         'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-        [newPasswordHash, userId]
+        [newPasswordHash, userId],
       );
 
       // Invalidate all user sessions except current one
       await query(
         'UPDATE user_sessions SET is_active = false WHERE user_id = $1',
-        [userId]
+        [userId],
       );
 
       logger.logBusinessEvent('Password changed', {
-        userId
+        userId,
       });
 
       return true;
@@ -404,7 +404,7 @@ class AuthService {
         isActive: user.is_active,
         createdAt: user.created_at,
         updatedAt: user.updated_at,
-        lastLogin: user.last_login
+        lastLogin: user.last_login,
       };
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -451,7 +451,7 @@ class AuthService {
 
       logger.logBusinessEvent('User profile updated', {
         userId,
-        updates: Object.keys(updates)
+        updates: Object.keys(updates),
       });
 
       return {
@@ -461,7 +461,7 @@ class AuthService {
         lastName: user.last_name,
         role: user.role,
         isVerified: user.is_verified,
-        updatedAt: user.updated_at
+        updatedAt: user.updated_at,
       };
     } catch (error) {
       if (error instanceof AppError) throw error;

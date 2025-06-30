@@ -15,26 +15,26 @@ const consoleFormat = winston.format.combine(
   winston.format.errors({ stack: true }),
   winston.format.printf(({ timestamp, level, message, stack, ...meta }) => {
     let log = `${timestamp} [${level}]: ${message}`;
-    
+
     // Add stack trace for errors
     if (stack) {
       log += `\n${stack}`;
     }
-    
+
     // Add metadata if present
     if (Object.keys(meta).length > 0) {
       log += `\n${JSON.stringify(meta, null, 2)}`;
     }
-    
+
     return log;
-  })
+  }),
 );
 
 // Custom format for file output
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
-  winston.format.json()
+  winston.format.json(),
 );
 
 // Create the logger
@@ -43,7 +43,7 @@ const logger = winston.createLogger({
   format: fileFormat,
   defaultMeta: {
     service: 'url-shortener-api',
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   },
   transports: [
     // Write all logs with level 'error' and below to error.log
@@ -52,41 +52,41 @@ const logger = winston.createLogger({
       level: 'error',
       maxsize: 5242880, // 5MB
       maxFiles: 5,
-      format: fileFormat
+      format: fileFormat,
     }),
-    
+
     // Write all logs with level 'info' and below to combined.log
     new winston.transports.File({
       filename: path.join(logsDir, 'combined.log'),
       maxsize: 5242880, // 5MB
       maxFiles: 5,
-      format: fileFormat
-    })
+      format: fileFormat,
+    }),
   ],
-  
+
   // Handle exceptions and rejections
   exceptionHandlers: [
     new winston.transports.File({
       filename: path.join(logsDir, 'exceptions.log'),
       maxsize: 5242880, // 5MB
-      maxFiles: 5
-    })
+      maxFiles: 5,
+    }),
   ],
-  
+
   rejectionHandlers: [
     new winston.transports.File({
       filename: path.join(logsDir, 'rejections.log'),
       maxsize: 5242880, // 5MB
-      maxFiles: 5
-    })
-  ]
+      maxFiles: 5,
+    }),
+  ],
 });
 
 // Add console transport for non-production environments
 if (process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console({
     format: consoleFormat,
-    level: process.env.LOG_LEVEL || 'debug'
+    level: process.env.LOG_LEVEL || 'debug',
   }));
 }
 
@@ -96,7 +96,7 @@ if (process.env.NODE_ENV === 'test') {
   logger.add(new winston.transports.Console({
     format: winston.format.simple(),
     level: 'error',
-    silent: process.env.SILENT_TESTS === 'true'
+    silent: process.env.SILENT_TESTS === 'true',
   }));
 }
 
@@ -104,14 +104,14 @@ if (process.env.NODE_ENV === 'test') {
 const logWithContext = (level, message, context = {}) => {
   logger.log(level, message, {
     timestamp: new Date().toISOString(),
-    ...context
+    ...context,
   });
 };
 
 // Enhanced logging methods
 const enhancedLogger = {
   ...logger,
-  
+
   // Request logging
   logRequest: (req, res, responseTime) => {
     const logData = {
@@ -121,61 +121,61 @@ const enhancedLogger = {
       responseTime: `${responseTime}ms`,
       userAgent: req.get('User-Agent'),
       ip: req.ip,
-      userId: req.user?.id
+      userId: req.user?.id,
     };
-    
+
     if (res.statusCode >= 400) {
       logger.warn('HTTP Request', logData);
     } else {
       logger.info('HTTP Request', logData);
     }
   },
-  
+
   // Database operation logging
   logDbOperation: (operation, table, duration, rowCount) => {
     logWithContext('debug', `Database ${operation}`, {
       table,
       duration: `${duration}ms`,
       rowCount,
-      category: 'database'
+      category: 'database',
     });
   },
-  
+
   // Cache operation logging
   logCacheOperation: (operation, key, hit = null) => {
     logWithContext('debug', `Cache ${operation}`, {
       key: key.substring(0, 50) + (key.length > 50 ? '...' : ''),
       hit,
-      category: 'cache'
+      category: 'cache',
     });
   },
-  
+
   // Security event logging
   logSecurityEvent: (event, details = {}) => {
     logWithContext('warn', `Security Event: ${event}`, {
       ...details,
       category: 'security',
-      severity: 'high'
+      severity: 'high',
     });
   },
-  
+
   // Business logic logging
   logBusinessEvent: (event, details = {}) => {
     logWithContext('info', `Business Event: ${event}`, {
       ...details,
-      category: 'business'
+      category: 'business',
     });
   },
-  
+
   // Performance logging
   logPerformance: (operation, duration, details = {}) => {
     const level = duration > 1000 ? 'warn' : 'info';
     logWithContext(level, `Performance: ${operation}`, {
       duration: `${duration}ms`,
       ...details,
-      category: 'performance'
+      category: 'performance',
     });
-  }
+  },
 };
 
 module.exports = enhancedLogger;

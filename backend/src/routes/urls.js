@@ -14,7 +14,7 @@ const createUrlSchema = Joi.object({
   title: Joi.string().max(500).optional(),
   description: Joi.string().max(1000).optional(),
   expiresAt: Joi.date().greater('now').optional(),
-  isPublic: Joi.boolean().default(true)
+  isPublic: Joi.boolean().default(true),
 });
 
 const updateUrlSchema = Joi.object({
@@ -22,7 +22,7 @@ const updateUrlSchema = Joi.object({
   description: Joi.string().max(1000).optional(),
   isActive: Joi.boolean().optional(),
   isPublic: Joi.boolean().optional(),
-  expiresAt: Joi.date().greater('now').allow(null).optional()
+  expiresAt: Joi.date().greater('now').allow(null).optional(),
 });
 
 const getUrlsSchema = Joi.object({
@@ -31,7 +31,7 @@ const getUrlsSchema = Joi.object({
   sortBy: Joi.string().valid('created_at', 'updated_at', 'click_count', 'title').default('created_at'),
   sortOrder: Joi.string().valid('ASC', 'DESC').default('DESC'),
   search: Joi.string().max(100).optional(),
-  isActive: Joi.boolean().optional()
+  isActive: Joi.boolean().optional(),
 });
 
 /**
@@ -137,13 +137,13 @@ router.post('/', optionalAuth, urlCreationLimiter, urlQuotaCheck, asyncHandler(a
     return res.status(400).json({
       success: false,
       message: 'Validation error',
-      errors: error.details.map(detail => detail.message)
+      errors: error.details.map(detail => detail.message),
     });
   }
 
   const urlData = {
     ...value,
-    userId: req.user?.id
+    userId: req.user?.id,
   };
 
   const url = await urlService.createUrl(urlData);
@@ -152,7 +152,7 @@ router.post('/', optionalAuth, urlCreationLimiter, urlQuotaCheck, asyncHandler(a
     success: true,
     message: 'URL created successfully',
     url,
-    quota: req.quota
+    quota: req.quota,
   });
 }));
 
@@ -236,7 +236,7 @@ router.get('/', authenticateToken, asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       message: 'Validation error',
-      errors: error.details.map(detail => detail.message)
+      errors: error.details.map(detail => detail.message),
     });
   }
 
@@ -245,7 +245,7 @@ router.get('/', authenticateToken, asyncHandler(async (req, res) => {
   res.json({
     success: true,
     urls: result.urls,
-    pagination: result.pagination
+    pagination: result.pagination,
   });
 }));
 
@@ -286,13 +286,13 @@ router.get('/:id', authenticateToken, asyncHandler(async (req, res) => {
   const { query } = require('../database/connection');
   const result = await query(
     'SELECT * FROM urls WHERE id = $1 AND user_id = $2',
-    [id, req.user.id]
+    [id, req.user.id],
   );
 
   if (result.rows.length === 0) {
     return res.status(404).json({
       success: false,
-      message: 'URL not found'
+      message: 'URL not found',
     });
   }
 
@@ -315,8 +315,8 @@ router.get('/:id', authenticateToken, asyncHandler(async (req, res) => {
       createdAt: url.created_at,
       updatedAt: url.updated_at,
       expiresAt: url.expires_at,
-      lastAccessed: url.last_accessed
-    }
+      lastAccessed: url.last_accessed,
+    },
   });
 }));
 
@@ -381,7 +381,7 @@ router.put('/:id', authenticateToken, asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       message: 'Validation error',
-      errors: error.details.map(detail => detail.message)
+      errors: error.details.map(detail => detail.message),
     });
   }
 
@@ -390,7 +390,7 @@ router.put('/:id', authenticateToken, asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: 'URL updated successfully',
-    url
+    url,
   });
 }));
 
@@ -422,7 +422,7 @@ router.delete('/:id', authenticateToken, asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    message: 'URL deleted successfully'
+    message: 'URL deleted successfully',
   });
 }));
 

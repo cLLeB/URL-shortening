@@ -25,7 +25,7 @@ app.set('trust proxy', 1);
 
 // Security middleware
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
 // CORS configuration
@@ -33,7 +33,7 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
 // Compression middleware
@@ -47,8 +47,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('combined', {
     stream: {
-      write: (message) => logger.info(message.trim())
-    }
+      write: (message) => logger.info(message.trim()),
+    },
   }));
 }
 
@@ -61,7 +61,7 @@ app.get('/health', (req, res) => {
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV
+    environment: process.env.NODE_ENV,
   });
 });
 
@@ -75,7 +75,7 @@ app.use('/api/users', userRoutes);
 if (process.env.NODE_ENV !== 'production') {
   const swaggerJsdoc = require('swagger-jsdoc');
   const swaggerUi = require('swagger-ui-express');
-  
+
   const swaggerOptions = {
     definition: {
       openapi: '3.0.0',
@@ -85,26 +85,26 @@ if (process.env.NODE_ENV !== 'production') {
         description: 'Professional URL shortener service API',
         contact: {
           name: 'API Support',
-          email: 'support@urlshortener.com'
-        }
+          email: 'support@urlshortener.com',
+        },
       },
       servers: [
         {
           url: `http://localhost:${PORT}`,
-          description: 'Development server'
-        }
+          description: 'Development server',
+        },
       ],
       components: {
         securitySchemes: {
           bearerAuth: {
             type: 'http',
             scheme: 'bearer',
-            bearerFormat: 'JWT'
-          }
-        }
-      }
+            bearerFormat: 'JWT',
+          },
+        },
+      },
     },
-    apis: ['./src/routes/*.js', './src/models/*.js']
+    apis: ['./src/routes/*.js', './src/models/*.js'],
   };
 
   const specs = swaggerJsdoc(swaggerOptions);
@@ -118,12 +118,15 @@ app.get('/:shortCode', require('./controllers/redirectController'));
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Route not found'
+    message: 'Route not found',
   });
 });
 
 // Global error handler
 app.use(errorHandler);
+
+// Global server variable
+let server;
 
 // Graceful shutdown
 process.on('SIGTERM', gracefulShutdown);
@@ -131,13 +134,17 @@ process.on('SIGINT', gracefulShutdown);
 
 function gracefulShutdown(signal) {
   logger.info(`Received ${signal}. Starting graceful shutdown...`);
-  
-  server.close(() => {
-    logger.info('HTTP server closed.');
-    
-    // Close database connections
+
+  if (server) {
+    server.close(() => {
+      logger.info('HTTP server closed.');
+
+      // Close database connections
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 }
 
 // Start server
@@ -152,7 +159,7 @@ async function startServer() {
     logger.info('Redis connected successfully');
 
     // Start HTTP server
-    const server = app.listen(PORT, () => {
+    server = app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
       logger.info(`API Documentation: http://localhost:${PORT}/api-docs`);
     });
@@ -164,16 +171,16 @@ async function startServer() {
       }
 
       switch (error.code) {
-        case 'EACCES':
-          logger.error(`Port ${PORT} requires elevated privileges`);
-          process.exit(1);
-          break;
-        case 'EADDRINUSE':
-          logger.error(`Port ${PORT} is already in use`);
-          process.exit(1);
-          break;
-        default:
-          throw error;
+      case 'EACCES':
+        logger.error(`Port ${PORT} requires elevated privileges`);
+        process.exit(1);
+        break;
+      case 'EADDRINUSE':
+        logger.error(`Port ${PORT} is already in use`);
+        process.exit(1);
+        break;
+      default:
+        throw error;
       }
     });
 

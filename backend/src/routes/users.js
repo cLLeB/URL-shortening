@@ -70,7 +70,7 @@ router.get('/stats', authenticateToken, asyncHandler(async (req, res) => {
   const [statsResult, clicksResult, topUrlResult] = await Promise.all([
     query(statsQuery, [userId]),
     query(clicksThisMonthQuery, [userId]),
-    query(topUrlQuery, [userId])
+    query(topUrlQuery, [userId]),
   ]);
 
   const stats = statsResult.rows[0];
@@ -91,9 +91,9 @@ router.get('/stats', authenticateToken, asyncHandler(async (req, res) => {
         shortUrl: `${baseUrl}/${topUrl.short_code}`,
         originalUrl: topUrl.original_url,
         title: topUrl.title,
-        clickCount: topUrl.click_count
-      } : null
-    }
+        clickCount: topUrl.click_count,
+      } : null,
+    },
   });
 }));
 
@@ -125,12 +125,12 @@ router.get('/sessions', authenticateToken, asyncHandler(async (req, res) => {
     createdAt: session.created_at,
     lastUsed: session.last_used,
     expiresAt: session.expires_at,
-    isCurrent: session.ip_address === req.ip // Simple check, could be more sophisticated
+    isCurrent: session.ip_address === req.ip, // Simple check, could be more sophisticated
   }));
 
   res.json({
     success: true,
-    sessions
+    sessions,
   });
 }));
 
@@ -166,13 +166,13 @@ router.delete('/sessions/:sessionId', authenticateToken, asyncHandler(async (req
   if (result.rows.length === 0) {
     return res.status(404).json({
       success: false,
-      message: 'Session not found'
+      message: 'Session not found',
     });
   }
 
   res.json({
     success: true,
-    message: 'Session revoked successfully'
+    message: 'Session revoked successfully',
   });
 }));
 
@@ -238,13 +238,13 @@ router.get('/activity', authenticateToken, asyncHandler(async (req, res) => {
       shortCode: row.short_code,
       shortUrl: `${baseUrl}/${row.short_code}`,
       originalUrl: row.original_url,
-      title: row.title
-    }
+      title: row.title,
+    },
   }));
 
   res.json({
     success: true,
-    activities
+    activities,
   });
 }));
 
@@ -286,7 +286,7 @@ router.get('/', authenticateToken, requireRole('admin'), asyncHandler(async (req
   const offset = (page - 1) * limit;
 
   let whereClause = '';
-  let params = [];
+  const params = [];
   let paramCount = 0;
 
   if (search) {
@@ -298,7 +298,7 @@ router.get('/', authenticateToken, requireRole('admin'), asyncHandler(async (req
   // Get total count
   const countResult = await query(
     `SELECT COUNT(*) as total FROM users ${whereClause}`,
-    params
+    params,
   );
   const total = parseInt(countResult.rows[0].total);
 
@@ -326,7 +326,7 @@ router.get('/', authenticateToken, requireRole('admin'), asyncHandler(async (req
     createdAt: user.created_at,
     lastLogin: user.last_login,
     urlCount: parseInt(user.url_count),
-    totalClicks: parseInt(user.total_clicks)
+    totalClicks: parseInt(user.total_clicks),
   }));
 
   res.json({
@@ -338,8 +338,8 @@ router.get('/', authenticateToken, requireRole('admin'), asyncHandler(async (req
       total,
       pages: Math.ceil(total / limit),
       hasNext: page < Math.ceil(total / limit),
-      hasPrev: page > 1
-    }
+      hasPrev: page > 1,
+    },
   });
 }));
 
@@ -397,7 +397,7 @@ router.patch('/:userId/status', authenticateToken, requireRole('admin'), asyncHa
   if (updates.length === 0) {
     return res.status(400).json({
       success: false,
-      message: 'No valid updates provided'
+      message: 'No valid updates provided',
     });
   }
 
@@ -414,14 +414,14 @@ router.patch('/:userId/status', authenticateToken, requireRole('admin'), asyncHa
   if (result.rows.length === 0) {
     return res.status(404).json({
       success: false,
-      message: 'User not found'
+      message: 'User not found',
     });
   }
 
   res.json({
     success: true,
     message: 'User status updated successfully',
-    user: result.rows[0]
+    user: result.rows[0],
   });
 }));
 

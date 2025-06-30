@@ -12,26 +12,26 @@ const dbConfig = {
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+  connectionTimeoutMillis: 2000, // Return error after 2 seconds if connection fails
   maxUses: 7500, // Close (and replace) a connection after it has been used 7500 times
 };
 
 async function connectDatabase() {
   try {
     pool = new Pool(dbConfig);
-    
+
     // Test the connection
     const client = await pool.connect();
     await client.query('SELECT NOW()');
     client.release();
-    
+
     logger.info('Database connection established successfully');
-    
+
     // Handle pool errors
     pool.on('error', (err) => {
       logger.error('Unexpected error on idle client', err);
     });
-    
+
     return pool;
   } catch (error) {
     logger.error('Failed to connect to database:', error);
@@ -44,21 +44,21 @@ async function query(text, params) {
   try {
     const result = await pool.query(text, params);
     const duration = Date.now() - start;
-    
+
     if (process.env.NODE_ENV === 'development') {
-      logger.debug('Executed query', { 
+      logger.debug('Executed query', {
         text: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
         duration: `${duration}ms`,
-        rows: result.rowCount 
+        rows: result.rowCount,
       });
     }
-    
+
     return result;
   } catch (error) {
-    logger.error('Database query error:', { 
+    logger.error('Database query error:', {
       error: error.message,
       query: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
-      params: params ? params.slice(0, 5) : undefined
+      params: params ? params.slice(0, 5) : undefined,
     });
     throw error;
   }
@@ -73,7 +73,7 @@ async function getClient() {
 
 async function transaction(callback) {
   const client = await getClient();
-  
+
   try {
     await client.query('BEGIN');
     const result = await callback(client);
@@ -97,17 +97,17 @@ async function closeDatabase() {
 // Health check function
 async function checkDatabaseHealth() {
   try {
-    const result = await query('SELECT 1 as health_check');
+    await query('SELECT 1 as health_check');
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      responseTime: Date.now()
+      responseTime: Date.now(),
     };
   } catch (error) {
     return {
       status: 'unhealthy',
       error: error.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }
@@ -121,5 +121,5 @@ module.exports = {
   checkDatabaseHealth,
   get pool() {
     return pool;
-  }
+  },
 };

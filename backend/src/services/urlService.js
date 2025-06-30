@@ -17,11 +17,11 @@ class UrlService {
     try {
       if (customAlias) {
         // Validate custom alias
-        if (customAlias.length < this.customAliasMinLength || 
+        if (customAlias.length < this.customAliasMinLength ||
             customAlias.length > this.customAliasMaxLength) {
           throw new AppError(
             `Custom alias must be between ${this.customAliasMinLength} and ${this.customAliasMaxLength} characters`,
-            400
+            400,
           );
         }
 
@@ -33,7 +33,7 @@ class UrlService {
         // Check if custom alias is available
         const existing = await query(
           'SELECT id FROM urls WHERE short_code = $1 OR custom_alias = $1',
-          [customAlias]
+          [customAlias],
         );
 
         if (existing.rows.length > 0) {
@@ -46,11 +46,11 @@ class UrlService {
       // Generate random short code
       for (let i = 0; i < retries; i++) {
         const shortCode = nanoid(this.shortCodeLength);
-        
+
         // Check if short code already exists
         const existing = await query(
           'SELECT id FROM urls WHERE short_code = $1',
-          [shortCode]
+          [shortCode],
         );
 
         if (existing.rows.length === 0) {
@@ -70,14 +70,14 @@ class UrlService {
   validateUrl(url) {
     try {
       const urlObj = new URL(url);
-      
+
       // Check if protocol is http or https
       if (!['http:', 'https:'].includes(urlObj.protocol)) {
         throw new AppError('URL must use HTTP or HTTPS protocol', 400);
       }
 
       // Check for localhost in production
-      if (process.env.NODE_ENV === 'production' && 
+      if (process.env.NODE_ENV === 'production' &&
           (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1')) {
         throw new AppError('Localhost URLs are not allowed in production', 400);
       }
@@ -102,13 +102,13 @@ class UrlService {
       // For now, we'll return basic metadata
       return {
         title: null,
-        description: null
+        description: null,
       };
     } catch (error) {
       logger.warn('Failed to fetch URL metadata:', error);
       return {
         title: null,
-        description: null
+        description: null,
       };
     }
   }
@@ -127,7 +127,7 @@ class UrlService {
       // Get URL metadata if not provided
       let urlTitle = title;
       let urlDescription = description;
-      
+
       if (!urlTitle || !urlDescription) {
         const metadata = await this.getUrlMetadata(originalUrl);
         urlTitle = urlTitle || metadata.title;
@@ -150,7 +150,7 @@ class UrlService {
         urlDescription,
         true,
         isPublic,
-        expiresAt || null
+        expiresAt || null,
       ]);
 
       const url = result.rows[0];
@@ -164,7 +164,7 @@ class UrlService {
         shortCode: url.short_code,
         userId: userId || 'anonymous',
         hasCustomAlias: !!customAlias,
-        hasExpiry: !!expiresAt
+        hasExpiry: !!expiresAt,
       });
 
       return {
@@ -178,7 +178,7 @@ class UrlService {
         isPublic: url.is_public,
         clickCount: url.click_count,
         createdAt: url.created_at,
-        expiresAt: url.expires_at
+        expiresAt: url.expires_at,
       };
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -216,7 +216,7 @@ class UrlService {
         logger.logBusinessEvent('URL access denied - expired', {
           urlId: url.id,
           shortCode: url.short_code,
-          expiresAt: url.expires_at
+          expiresAt: url.expires_at,
         });
         return null;
       }
@@ -236,7 +236,7 @@ class UrlService {
         updatedAt: url.updated_at,
         expiresAt: url.expires_at,
         lastAccessed: url.last_accessed,
-        userEmail: url.user_email
+        userEmail: url.user_email,
       };
 
       // Cache for future requests
@@ -278,13 +278,13 @@ class UrlService {
         sortBy = 'created_at',
         sortOrder = 'DESC',
         search = '',
-        isActive = null
+        isActive = null,
       } = options;
 
       const offset = (page - 1) * limit;
-      
+
       let whereClause = 'WHERE user_id = $1';
-      let params = [userId];
+      const params = [userId];
       let paramCount = 1;
 
       if (search) {
@@ -302,7 +302,7 @@ class UrlService {
       // Get total count
       const countResult = await query(
         `SELECT COUNT(*) as total FROM urls ${whereClause}`,
-        params
+        params,
       );
       const total = parseInt(countResult.rows[0].total);
 
@@ -331,7 +331,7 @@ class UrlService {
         createdAt: url.created_at,
         updatedAt: url.updated_at,
         expiresAt: url.expires_at,
-        lastAccessed: url.last_accessed
+        lastAccessed: url.last_accessed,
       }));
 
       return {
@@ -342,8 +342,8 @@ class UrlService {
           total,
           pages: Math.ceil(total / limit),
           hasNext: page < Math.ceil(total / limit),
-          hasPrev: page > 1
-        }
+          hasPrev: page > 1,
+        },
       };
     } catch (error) {
       logger.error('Error getting user URLs:', error);
@@ -397,7 +397,7 @@ class UrlService {
         urlId: url.id,
         shortCode: url.short_code,
         userId,
-        updates: Object.keys(updates)
+        updates: Object.keys(updates),
       });
 
       return {
@@ -413,7 +413,7 @@ class UrlService {
         clickCount: url.click_count,
         createdAt: url.created_at,
         updatedAt: url.updated_at,
-        expiresAt: url.expires_at
+        expiresAt: url.expires_at,
       };
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -443,7 +443,7 @@ class UrlService {
       logger.logBusinessEvent('URL deleted', {
         urlId,
         shortCode,
-        userId
+        userId,
       });
 
       return true;

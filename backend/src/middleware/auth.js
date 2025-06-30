@@ -11,23 +11,23 @@ const authenticateToken = async (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Access token required'
+        message: 'Access token required',
       });
     }
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Get user from database to ensure they still exist and are active
     const userResult = await query(
       'SELECT id, email, role, is_active, is_verified FROM users WHERE id = $1',
-      [decoded.userId]
+      [decoded.userId],
     );
 
     if (userResult.rows.length === 0) {
       return res.status(401).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
     }
 
@@ -36,7 +36,7 @@ const authenticateToken = async (req, res, next) => {
     if (!user.is_active) {
       return res.status(401).json({
         success: false,
-        message: 'Account is deactivated'
+        message: 'Account is deactivated',
       });
     }
 
@@ -45,13 +45,13 @@ const authenticateToken = async (req, res, next) => {
       id: user.id,
       email: user.email,
       role: user.role,
-      isVerified: user.is_verified
+      isVerified: user.is_verified,
     };
 
     // Update last login
     await query(
       'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
-      [user.id]
+      [user.id],
     );
 
     next();
@@ -59,21 +59,21 @@ const authenticateToken = async (req, res, next) => {
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         success: false,
-        message: 'Invalid token'
+        message: 'Invalid token',
       });
     }
-    
+
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
-        message: 'Token expired'
+        message: 'Token expired',
       });
     }
 
     logger.error('Authentication error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Authentication failed'
+      message: 'Authentication failed',
     });
   }
 };
@@ -90,10 +90,10 @@ const optionalAuth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     const userResult = await query(
       'SELECT id, email, role, is_active, is_verified FROM users WHERE id = $1',
-      [decoded.userId]
+      [decoded.userId],
     );
 
     if (userResult.rows.length > 0 && userResult.rows[0].is_active) {
@@ -101,7 +101,7 @@ const optionalAuth = async (req, res, next) => {
         id: userResult.rows[0].id,
         email: userResult.rows[0].email,
         role: userResult.rows[0].role,
-        isVerified: userResult.rows[0].is_verified
+        isVerified: userResult.rows[0].is_verified,
       };
     } else {
       req.user = null;
@@ -121,24 +121,24 @@ const requireRole = (roles) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication required'
+        message: 'Authentication required',
       });
     }
 
     const userRoles = Array.isArray(roles) ? roles : [roles];
-    
+
     if (!userRoles.includes(req.user.role)) {
       logger.logSecurityEvent('Unauthorized role access attempt', {
         userId: req.user.id,
         userRole: req.user.role,
         requiredRoles: userRoles,
         endpoint: req.originalUrl,
-        ip: req.ip
+        ip: req.ip,
       });
 
       return res.status(403).json({
         success: false,
-        message: 'Insufficient permissions'
+        message: 'Insufficient permissions',
       });
     }
 
@@ -151,14 +151,14 @@ const requireVerification = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({
       success: false,
-      message: 'Authentication required'
+      message: 'Authentication required',
     });
   }
 
   if (!req.user.isVerified) {
     return res.status(403).json({
       success: false,
-      message: 'Email verification required'
+      message: 'Email verification required',
     });
   }
 
@@ -172,16 +172,16 @@ const requireOwnership = (resourceIdParam = 'id', resourceTable = 'urls') => {
       if (!req.user) {
         return res.status(401).json({
           success: false,
-          message: 'Authentication required'
+          message: 'Authentication required',
         });
       }
 
       const resourceId = req.params[resourceIdParam];
-      
+
       if (!resourceId) {
         return res.status(400).json({
           success: false,
-          message: 'Resource ID required'
+          message: 'Resource ID required',
         });
       }
 
@@ -192,13 +192,13 @@ const requireOwnership = (resourceIdParam = 'id', resourceTable = 'urls') => {
 
       const result = await query(
         `SELECT user_id FROM ${resourceTable} WHERE id = $1`,
-        [resourceId]
+        [resourceId],
       );
 
       if (result.rows.length === 0) {
         return res.status(404).json({
           success: false,
-          message: 'Resource not found'
+          message: 'Resource not found',
         });
       }
 
@@ -208,12 +208,12 @@ const requireOwnership = (resourceIdParam = 'id', resourceTable = 'urls') => {
           resourceId,
           resourceTable,
           endpoint: req.originalUrl,
-          ip: req.ip
+          ip: req.ip,
         });
 
         return res.status(403).json({
           success: false,
-          message: 'Access denied'
+          message: 'Access denied',
         });
       }
 
@@ -222,7 +222,7 @@ const requireOwnership = (resourceIdParam = 'id', resourceTable = 'urls') => {
       logger.error('Ownership check error:', error);
       return res.status(500).json({
         success: false,
-        message: 'Authorization check failed'
+        message: 'Authorization check failed',
       });
     }
   };
@@ -233,13 +233,13 @@ const generateTokens = (userId) => {
   const accessToken = jwt.sign(
     { userId },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
   );
 
   const refreshToken = jwt.sign(
     { userId, type: 'refresh' },
     process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d' }
+    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d' },
   );
 
   return { accessToken, refreshToken };
@@ -261,5 +261,5 @@ module.exports = {
   requireVerification,
   requireOwnership,
   generateTokens,
-  verifyRefreshToken
+  verifyRefreshToken,
 };

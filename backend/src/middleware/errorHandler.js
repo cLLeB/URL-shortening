@@ -7,7 +7,7 @@ class AppError extends Error {
     this.statusCode = statusCode;
     this.isOperational = isOperational;
     this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
-    
+
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -20,33 +20,33 @@ const handleDatabaseError = (error) => {
   // PostgreSQL specific errors
   if (error.code) {
     switch (error.code) {
-      case '23505': // Unique violation
-        message = 'Resource already exists';
-        statusCode = 409;
-        break;
-      case '23503': // Foreign key violation
-        message = 'Referenced resource not found';
-        statusCode = 400;
-        break;
-      case '23502': // Not null violation
-        message = 'Required field is missing';
-        statusCode = 400;
-        break;
-      case '23514': // Check violation
-        message = 'Invalid data provided';
-        statusCode = 400;
-        break;
-      case '42P01': // Undefined table
-        message = 'Database table not found';
-        statusCode = 500;
-        break;
-      case '42703': // Undefined column
-        message = 'Database column not found';
-        statusCode = 500;
-        break;
-      default:
-        message = 'Database error occurred';
-        statusCode = 500;
+    case '23505': // Unique violation
+      message = 'Resource already exists';
+      statusCode = 409;
+      break;
+    case '23503': // Foreign key violation
+      message = 'Referenced resource not found';
+      statusCode = 400;
+      break;
+    case '23502': // Not null violation
+      message = 'Required field is missing';
+      statusCode = 400;
+      break;
+    case '23514': // Check violation
+      message = 'Invalid data provided';
+      statusCode = 400;
+      break;
+    case '42P01': // Undefined table
+      message = 'Database table not found';
+      statusCode = 500;
+      break;
+    case '42703': // Undefined column
+      message = 'Database column not found';
+      statusCode = 500;
+      break;
+    default:
+      message = 'Database error occurred';
+      statusCode = 500;
     }
   }
 
@@ -69,14 +69,14 @@ const handleValidationError = (error) => {
     const message = error.details.map(detail => detail.message).join(', ');
     return new AppError(`Validation error: ${message}`, 400);
   }
-  
+
   // Express validator errors
   if (error.array && typeof error.array === 'function') {
     const errors = error.array();
     const message = errors.map(err => `${err.param}: ${err.msg}`).join(', ');
     return new AppError(`Validation error: ${message}`, 400);
   }
-  
+
   return new AppError('Validation failed', 400);
 };
 
@@ -93,7 +93,7 @@ const sendErrorDev = (err, res) => {
     error: err,
     message: err.message,
     stack: err.stack,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 };
 
@@ -104,22 +104,22 @@ const sendErrorProd = (err, res) => {
     res.status(err.statusCode).json({
       success: false,
       message: err.message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } else {
     // Programming or other unknown error: don't leak error details
     logger.error('Unexpected error:', err);
-    
+
     res.status(500).json({
       success: false,
       message: 'Something went wrong!',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 };
 
 // Main error handling middleware
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, _next) => {
   let error = { ...err };
   error.message = err.message;
   error.statusCode = err.statusCode || 500;
@@ -133,19 +133,19 @@ const errorHandler = (err, req, res, next) => {
     userId: req.user?.id,
     body: req.method !== 'GET' ? req.body : undefined,
     params: req.params,
-    query: req.query
+    query: req.query,
   };
 
   if (error.statusCode >= 500) {
     logger.error('Server Error:', {
       error: error.message,
       stack: error.stack,
-      ...errorContext
+      ...errorContext,
     });
   } else if (error.statusCode >= 400) {
     logger.warn('Client Error:', {
       error: error.message,
-      ...errorContext
+      ...errorContext,
     });
   }
 
@@ -186,9 +186,9 @@ process.on('unhandledRejection', (err, promise) => {
   logger.error('Unhandled Promise Rejection:', {
     error: err.message,
     stack: err.stack,
-    promise: promise
+    promise,
   });
-  
+
   // Close server gracefully
   process.exit(1);
 });
@@ -197,9 +197,9 @@ process.on('unhandledRejection', (err, promise) => {
 process.on('uncaughtException', (err) => {
   logger.error('Uncaught Exception:', {
     error: err.message,
-    stack: err.stack
+    stack: err.stack,
   });
-  
+
   // Close server gracefully
   process.exit(1);
 });
@@ -211,5 +211,5 @@ module.exports = {
   notFound,
   handleDatabaseError,
   handleJWTError,
-  handleValidationError
+  handleValidationError,
 };
