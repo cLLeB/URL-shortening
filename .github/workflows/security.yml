@@ -28,25 +28,22 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
-        cache: 'npm'
+        # Disable caching since we're doing fresh installs
+        cache: ''
 
     - name: Install backend dependencies
       working-directory: ./backend
       run: |
-        if [ -f package-lock.json ]; then
-          npm ci --legacy-peer-deps
-        else
-          npm install --legacy-peer-deps
-        fi
+        npm cache clean --force
+        rm -rf node_modules package-lock.json
+        npm install --legacy-peer-deps --no-audit --no-fund
 
     - name: Install frontend dependencies
       working-directory: ./frontend
       run: |
-        if [ -f package-lock.json ]; then
-          npm ci --legacy-peer-deps
-        else
-          npm install --legacy-peer-deps
-        fi
+        npm cache clean --force
+        rm -rf node_modules package-lock.json
+        npm install --legacy-peer-deps --no-audit --no-fund
 
     - name: Run npm audit for backend
       working-directory: ./backend
