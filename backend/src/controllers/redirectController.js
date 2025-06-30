@@ -155,7 +155,8 @@ const handleRedirect = async (req, res) => {
 };
 
 // Handle URL info requests (for link previews, etc.)
-// const _getUrlInfo = async (req, res) => {
+/*
+const _getUrlInfo = async (req, res) => {
   try {
     const { shortCode } = req.params;
 
@@ -196,9 +197,11 @@ const handleRedirect = async (req, res) => {
     });
   }
 };
+*/
 
 // Handle QR code generation
-// const _generateQRCode = async (req, res) => {
+/*
+const _generateQRCode = async (req, res) => {
   try {
     const { shortCode } = req.params;
     const { size = 200, format = 'png' } = req.query;
@@ -239,5 +242,6 @@ const handleRedirect = async (req, res) => {
     });
   }
 };
+*/
 
 module.exports = handleRedirect;

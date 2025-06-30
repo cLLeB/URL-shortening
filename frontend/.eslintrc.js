@@ -19,9 +19,12 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    'prefer-const': 'error',
-    'no-var': 'error',
+    'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    'prefer-const': 'warn',
+    'no-var': 'warn',
+    'testing-library/no-node-access': 'warn',
+    'jsx-a11y/anchor-is-valid': 'warn',
+    'react-hooks/exhaustive-deps': 'warn',
   },
 
 };

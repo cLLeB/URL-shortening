@@ -1,5 +1,5 @@
 const { nanoid } = require('nanoid');
-const { query, transaction } = require('../database/connection');
+const { query } = require('../database/connection');
 const { set, get, del } = require('../config/redis');
 const logger = require('../utils/logger');
 const { AppError } = require('../middleware/errorHandler');

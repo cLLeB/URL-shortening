@@ -1,6 +1,6 @@
 const rateLimit = require('express-rate-limit');
 const slowDown = require('express-slow-down');
-const { incr, get, set } = require('../config/redis');
+const { incr, get, set, del } = require('../config/redis');
 const logger = require('../utils/logger');
 
 // Create a custom store using Redis
