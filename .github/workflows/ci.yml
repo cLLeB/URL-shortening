@@ -60,7 +60,12 @@ jobs:
 
     - name: Install backend dependencies
       working-directory: ./backend
-      run: npm ci
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci --legacy-peer-deps
+        else
+          npm install --legacy-peer-deps
+        fi
 
     - name: Run backend linting
       working-directory: ./backend
@@ -115,7 +120,12 @@ jobs:
 
     - name: Install frontend dependencies
       working-directory: ./frontend
-      run: npm ci
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci --legacy-peer-deps
+        else
+          npm install --legacy-peer-deps
+        fi
 
     - name: Run frontend linting
       working-directory: ./frontend
@@ -166,11 +176,21 @@ jobs:
 
     - name: Install backend dependencies
       working-directory: ./backend
-      run: npm ci
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci --legacy-peer-deps
+        else
+          npm install --legacy-peer-deps
+        fi
 
     - name: Install frontend dependencies
       working-directory: ./frontend
-      run: npm ci
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci --legacy-peer-deps
+        else
+          npm install --legacy-peer-deps
+        fi
 
     - name: Run backend security audit
       working-directory: ./backend
@@ -241,7 +261,12 @@ jobs:
 
     - name: Install backend dependencies
       working-directory: ./backend
-      run: npm ci
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci --legacy-peer-deps
+        else
+          npm install --legacy-peer-deps
+        fi
 
     - name: Wait for services to be ready
       run: |

@@ -32,11 +32,21 @@ jobs:
 
     - name: Install backend dependencies
       working-directory: ./backend
-      run: npm ci
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci --legacy-peer-deps
+        else
+          npm install --legacy-peer-deps
+        fi
 
     - name: Install frontend dependencies
       working-directory: ./frontend
-      run: npm ci
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci --legacy-peer-deps
+        else
+          npm install --legacy-peer-deps
+        fi
 
     - name: Run npm audit for backend
       working-directory: ./backend
