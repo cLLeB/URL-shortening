@@ -7,23 +7,30 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "maintainer-username"
-    assignees:
-      - "maintainer-username"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
     commit-message:
-      prefix: "backend"
+      prefix: "deps(backend)"
       include: "scope"
     labels:
       - "dependencies"
       - "backend"
+      - "automated"
     ignore:
       # Ignore major version updates for stable dependencies
       - dependency-name: "express"
         update-types: ["version-update:semver-major"]
       - dependency-name: "pg"
         update-types: ["version-update:semver-major"]
+    groups:
+      backend-dev-dependencies:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "prettier"
+          - "jest"
+          - "nodemon"
+          - "supertest"
 
   # Frontend dependencies
   - package-ecosystem: "npm"
@@ -32,17 +39,15 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "maintainer-username"
-    assignees:
-      - "maintainer-username"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
     commit-message:
-      prefix: "frontend"
+      prefix: "deps(frontend)"
       include: "scope"
     labels:
       - "dependencies"
       - "frontend"
+      - "automated"
     ignore:
       # Ignore major version updates for React and related packages
       - dependency-name: "react"
@@ -51,6 +56,17 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "react-scripts"
         update-types: ["version-update:semver-major"]
+    groups:
+      frontend-dev-dependencies:
+        patterns:
+          - "@types/*"
+          - "@testing-library/*"
+          - "eslint*"
+          - "prettier"
+          - "jest*"
+          - "tailwindcss"
+          - "autoprefixer"
+          - "postcss"
 
   # Docker dependencies
   - package-ecosystem: "docker"
@@ -59,16 +75,14 @@ updates:
       interval: "weekly"
       day: "tuesday"
       time: "09:00"
-    reviewers:
-      - "maintainer-username"
-    assignees:
-      - "maintainer-username"
+      timezone: "UTC"
     commit-message:
-      prefix: "docker"
+      prefix: "deps(docker)"
       include: "scope"
     labels:
       - "dependencies"
       - "docker"
+      - "automated"
 
   - package-ecosystem: "docker"
     directory: "/frontend"
@@ -76,16 +90,14 @@ updates:
       interval: "weekly"
       day: "tuesday"
       time: "09:00"
-    reviewers:
-      - "maintainer-username"
-    assignees:
-      - "maintainer-username"
+      timezone: "UTC"
     commit-message:
-      prefix: "docker"
+      prefix: "deps(docker)"
       include: "scope"
     labels:
       - "dependencies"
       - "docker"
+      - "automated"
 
   # GitHub Actions dependencies
   - package-ecosystem: "github-actions"
@@ -94,13 +106,16 @@ updates:
       interval: "weekly"
       day: "wednesday"
       time: "09:00"
-    reviewers:
-      - "maintainer-username"
-    assignees:
-      - "maintainer-username"
+      timezone: "UTC"
     commit-message:
-      prefix: "ci"
+      prefix: "deps(ci)"
       include: "scope"
     labels:
       - "dependencies"
       - "github-actions"
+      - "automated"
+    groups:
+      github-actions:
+        patterns:
+          - "actions/*"
+          - "github/*"
