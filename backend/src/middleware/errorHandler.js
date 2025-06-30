@@ -13,47 +13,47 @@ class AppError extends Error {
 }
 
 // Handle different types of errors
-const handleDatabaseError = (error) => {
+const handleDatabaseError = error => {
   let message = 'Database operation failed';
   let statusCode = 500;
 
   // PostgreSQL specific errors
   if (error.code) {
     switch (error.code) {
-    case '23505': // Unique violation
-      message = 'Resource already exists';
-      statusCode = 409;
-      break;
-    case '23503': // Foreign key violation
-      message = 'Referenced resource not found';
-      statusCode = 400;
-      break;
-    case '23502': // Not null violation
-      message = 'Required field is missing';
-      statusCode = 400;
-      break;
-    case '23514': // Check violation
-      message = 'Invalid data provided';
-      statusCode = 400;
-      break;
-    case '42P01': // Undefined table
-      message = 'Database table not found';
-      statusCode = 500;
-      break;
-    case '42703': // Undefined column
-      message = 'Database column not found';
-      statusCode = 500;
-      break;
-    default:
-      message = 'Database error occurred';
-      statusCode = 500;
+      case '23505': // Unique violation
+        message = 'Resource already exists';
+        statusCode = 409;
+        break;
+      case '23503': // Foreign key violation
+        message = 'Referenced resource not found';
+        statusCode = 400;
+        break;
+      case '23502': // Not null violation
+        message = 'Required field is missing';
+        statusCode = 400;
+        break;
+      case '23514': // Check violation
+        message = 'Invalid data provided';
+        statusCode = 400;
+        break;
+      case '42P01': // Undefined table
+        message = 'Database table not found';
+        statusCode = 500;
+        break;
+      case '42703': // Undefined column
+        message = 'Database column not found';
+        statusCode = 500;
+        break;
+      default:
+        message = 'Database error occurred';
+        statusCode = 500;
     }
   }
 
   return new AppError(message, statusCode);
 };
 
-const handleJWTError = (error) => {
+const handleJWTError = error => {
   if (error.name === 'JsonWebTokenError') {
     return new AppError('Invalid token provided', 401);
   }
@@ -63,7 +63,7 @@ const handleJWTError = (error) => {
   return new AppError('Authentication failed', 401);
 };
 
-const handleValidationError = (error) => {
+const handleValidationError = error => {
   // Joi validation errors
   if (error.isJoi) {
     const message = error.details.map(detail => detail.message).join(', ');
@@ -80,7 +80,7 @@ const handleValidationError = (error) => {
   return new AppError('Validation failed', 400);
 };
 
-const handleRedisError = (error) => {
+const handleRedisError = error => {
   logger.error('Redis error:', error);
   // Don't expose Redis errors to client
   return new AppError('Cache service temporarily unavailable', 503);
@@ -169,7 +169,7 @@ const errorHandler = (err, req, res, _next) => {
 };
 
 // Async error wrapper
-const asyncHandler = (fn) => {
+const asyncHandler = fn => {
   return (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
@@ -194,7 +194,7 @@ process.on('unhandledRejection', (err, promise) => {
 });
 
 // Uncaught exception handler
-process.on('uncaughtException', (err) => {
+process.on('uncaughtException', err => {
   logger.error('Uncaught Exception:', {
     error: err.message,
     stack: err.stack,

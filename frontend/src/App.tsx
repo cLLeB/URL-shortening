@@ -21,13 +21,13 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
+      <div className='min-h-screen flex items-center justify-center'>
+        <LoadingSpinner size='lg' />
       </div>
     );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <>{children}</> : <Navigate to='/login' replace />;
 };
 
 // Public Route Component (redirect to dashboard if authenticated)
@@ -36,13 +36,13 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
+      <div className='min-h-screen flex items-center justify-center'>
+        <LoadingSpinner size='lg' />
       </div>
     );
   }
 
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/dashboard" replace />;
+  return !isAuthenticated ? <>{children}</> : <Navigate to='/dashboard' replace />;
 };
 
 // App Routes Component
@@ -50,9 +50,9 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<HomePage />} />
+      <Route path='/' element={<HomePage />} />
       <Route
-        path="/login"
+        path='/login'
         element={
           <PublicRoute>
             <LoginPage />
@@ -60,7 +60,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/register"
+        path='/register'
         element={
           <PublicRoute>
             <RegisterPage />
@@ -70,7 +70,7 @@ const AppRoutes: React.FC = () => {
 
       {/* Protected Routes */}
       <Route
-        path="/dashboard"
+        path='/dashboard'
         element={
           <ProtectedRoute>
             <Layout>
@@ -80,7 +80,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/analytics"
+        path='/analytics'
         element={
           <ProtectedRoute>
             <Layout>
@@ -90,7 +90,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/urls/:id"
+        path='/urls/:id'
         element={
           <ProtectedRoute>
             <Layout>
@@ -100,7 +100,7 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/profile"
+        path='/profile'
         element={
           <ProtectedRoute>
             <Layout>
@@ -111,7 +111,7 @@ const AppRoutes: React.FC = () => {
       />
 
       {/* 404 Route */}
-      <Route path="*" element={<NotFoundPage />} />
+      <Route path='*' element={<NotFoundPage />} />
     </Routes>
   );
 };
@@ -121,10 +121,10 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className='min-h-screen bg-gray-50'>
           <AppRoutes />
           <Toaster
-            position="top-right"
+            position='top-right'
             toastOptions={{
               duration: 4000,
               style: {

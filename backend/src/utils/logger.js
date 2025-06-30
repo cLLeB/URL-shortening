@@ -27,14 +27,14 @@ const consoleFormat = winston.format.combine(
     }
 
     return log;
-  }),
+  })
 );
 
 // Custom format for file output
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
-  winston.format.json(),
+  winston.format.json()
 );
 
 // Create the logger
@@ -84,20 +84,24 @@ const logger = winston.createLogger({
 
 // Add console transport for non-production environments
 if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: consoleFormat,
-    level: process.env.LOG_LEVEL || 'debug',
-  }));
+  logger.add(
+    new winston.transports.Console({
+      format: consoleFormat,
+      level: process.env.LOG_LEVEL || 'debug',
+    })
+  );
 }
 
 // Add console transport for test environment with minimal output
 if (process.env.NODE_ENV === 'test') {
   logger.clear();
-  logger.add(new winston.transports.Console({
-    format: winston.format.simple(),
-    level: 'error',
-    silent: process.env.SILENT_TESTS === 'true',
-  }));
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.simple(),
+      level: 'error',
+      silent: process.env.SILENT_TESTS === 'true',
+    })
+  );
 }
 
 // Helper functions for structured logging

@@ -17,23 +17,28 @@ class UrlService {
     try {
       if (customAlias) {
         // Validate custom alias
-        if (customAlias.length < this.customAliasMinLength ||
-            customAlias.length > this.customAliasMaxLength) {
+        if (
+          customAlias.length < this.customAliasMinLength ||
+          customAlias.length > this.customAliasMaxLength
+        ) {
           throw new AppError(
             `Custom alias must be between ${this.customAliasMinLength} and ${this.customAliasMaxLength} characters`,
-            400,
+            400
           );
         }
 
         // Check if custom alias contains only allowed characters
         if (!/^[a-zA-Z0-9_-]+$/.test(customAlias)) {
-          throw new AppError('Custom alias can only contain letters, numbers, hyphens, and underscores', 400);
+          throw new AppError(
+            'Custom alias can only contain letters, numbers, hyphens, and underscores',
+            400
+          );
         }
 
         // Check if custom alias is available
         const existing = await query(
           'SELECT id FROM urls WHERE short_code = $1 OR custom_alias = $1',
-          [customAlias],
+          [customAlias]
         );
 
         if (existing.rows.length > 0) {
@@ -48,10 +53,7 @@ class UrlService {
         const shortCode = nanoid(this.shortCodeLength);
 
         // Check if short code already exists
-        const existing = await query(
-          'SELECT id FROM urls WHERE short_code = $1',
-          [shortCode],
-        );
+        const existing = await query('SELECT id FROM urls WHERE short_code = $1', [shortCode]);
 
         if (existing.rows.length === 0) {
           return shortCode;
@@ -77,8 +79,10 @@ class UrlService {
       }
 
       // Check for localhost in production
-      if (process.env.NODE_ENV === 'production' &&
-          (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1')) {
+      if (
+        process.env.NODE_ENV === 'production' &&
+        (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1')
+      ) {
         throw new AppError('Localhost URLs are not allowed in production', 400);
       }
 
@@ -116,7 +120,15 @@ class UrlService {
   // Create a new short URL
   async createUrl(data) {
     try {
-      const { originalUrl, customAlias, userId, title, description, expiresAt, isPublic = true } = data;
+      const {
+        originalUrl,
+        customAlias,
+        userId,
+        title,
+        description,
+        expiresAt,
+        isPublic = true,
+      } = data;
 
       // Validate original URL
       this.validateUrl(originalUrl);
@@ -135,23 +147,26 @@ class UrlService {
       }
 
       // Create URL record
-      const result = await query(`
+      const result = await query(
+        `
         INSERT INTO urls (
           user_id, original_url, short_code, custom_alias, title, description,
           is_active, is_public, expires_at
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING *
-      `, [
-        userId || null,
-        originalUrl,
-        shortCode,
-        customAlias,
-        urlTitle,
-        urlDescription,
-        true,
-        isPublic,
-        expiresAt || null,
-      ]);
+      `,
+        [
+          userId || null,
+          originalUrl,
+          shortCode,
+          customAlias,
+          urlTitle,
+          urlDescription,
+          true,
+          isPublic,
+          expiresAt || null,
+        ]
+      );
 
       const url = result.rows[0];
 
@@ -198,12 +213,15 @@ class UrlService {
       }
 
       // Query database
-      const result = await query(`
+      const result = await query(
+        `
         SELECT u.*, us.email as user_email
         FROM urls u
         LEFT JOIN users us ON u.user_id = us.id
         WHERE u.short_code = $1 AND u.is_active = true
-      `, [shortCode]);
+      `,
+        [shortCode]
+      );
 
       if (result.rows.length === 0) {
         return null;
@@ -300,14 +318,12 @@ class UrlService {
       }
 
       // Get total count
-      const countResult = await query(
-        `SELECT COUNT(*) as total FROM urls ${whereClause}`,
-        params,
-      );
+      const countResult = await query(`SELECT COUNT(*) as total FROM urls ${whereClause}`, params);
       const total = parseInt(countResult.rows[0].total);
 
       // Get URLs
-      const result = await query(`
+      const result = await query(
+        `
         SELECT 
           id, original_url, short_code, custom_alias, title, description,
           is_active, is_public, click_count, created_at, updated_at, expires_at, last_accessed
@@ -315,7 +331,9 @@ class UrlService {
         ${whereClause}
         ORDER BY ${sortBy} ${sortOrder}
         LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
-      `, [...params, limit, offset]);
+      `,
+        [...params, limit, offset]
+      );
 
       const urls = result.rows.map(url => ({
         id: url.id,
@@ -377,12 +395,15 @@ class UrlService {
       paramCount++;
       params.push(userId);
 
-      const result = await query(`
+      const result = await query(
+        `
         UPDATE urls 
         SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
         WHERE id = $${paramCount - 1} AND user_id = $${paramCount}
         RETURNING *
-      `, params);
+      `,
+        params
+      );
 
       if (result.rows.length === 0) {
         throw new AppError('URL not found or access denied', 404);
@@ -425,11 +446,14 @@ class UrlService {
   // Delete URL
   async deleteUrl(urlId, userId) {
     try {
-      const result = await query(`
+      const result = await query(
+        `
         DELETE FROM urls 
         WHERE id = $1 AND user_id = $2
         RETURNING short_code
-      `, [urlId, userId]);
+      `,
+        [urlId, userId]
+      );
 
       if (result.rows.length === 0) {
         throw new AppError('URL not found or access denied', 404);

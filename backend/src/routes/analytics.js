@@ -125,24 +125,28 @@ const timeRangeSchema = Joi.object({
  *                     timeRange:
  *                       type: string
  */
-router.get('/overview', authenticateToken, asyncHandler(async (req, res) => {
-  // Validate query parameters
-  const { error, value } = timeRangeSchema.validate(req.query);
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: error.details.map(detail => detail.message),
+router.get(
+  '/overview',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    // Validate query parameters
+    const { error, value } = timeRangeSchema.validate(req.query);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.details.map(detail => detail.message),
+      });
+    }
+
+    const analytics = await analyticsService.getUserAnalytics(req.user.id, value.timeRange);
+
+    res.json({
+      success: true,
+      analytics,
     });
-  }
-
-  const analytics = await analyticsService.getUserAnalytics(req.user.id, value.timeRange);
-
-  res.json({
-    success: true,
-    analytics,
-  });
-}));
+  })
+);
 
 /**
  * @swagger
@@ -180,26 +184,30 @@ router.get('/overview', authenticateToken, asyncHandler(async (req, res) => {
  *       404:
  *         description: URL not found or access denied
  */
-router.get('/urls/:urlId', authenticateToken, asyncHandler(async (req, res) => {
-  const { urlId } = req.params;
+router.get(
+  '/urls/:urlId',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const { urlId } = req.params;
 
-  // Validate query parameters
-  const { error, value } = timeRangeSchema.validate(req.query);
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: error.details.map(detail => detail.message),
+    // Validate query parameters
+    const { error, value } = timeRangeSchema.validate(req.query);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.details.map(detail => detail.message),
+      });
+    }
+
+    const analytics = await analyticsService.getUrlAnalytics(urlId, req.user.id, value.timeRange);
+
+    res.json({
+      success: true,
+      analytics,
     });
-  }
-
-  const analytics = await analyticsService.getUrlAnalytics(urlId, req.user.id, value.timeRange);
-
-  res.json({
-    success: true,
-    analytics,
-  });
-}));
+  })
+);
 
 /**
  * @swagger
@@ -258,31 +266,35 @@ router.get('/urls/:urlId', authenticateToken, asyncHandler(async (req, res) => {
  *                       isBot:
  *                         type: boolean
  */
-router.get('/urls/:urlId/clicks', authenticateToken, asyncHandler(async (req, res) => {
-  const { urlId } = req.params;
-  const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+router.get(
+  '/urls/:urlId/clicks',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const { urlId } = req.params;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
 
-  // Verify URL ownership
-  const { query } = require('../database/connection');
-  const urlCheck = await query(
-    'SELECT id FROM urls WHERE id = $1 AND user_id = $2',
-    [urlId, req.user.id],
-  );
+    // Verify URL ownership
+    const { query } = require('../database/connection');
+    const urlCheck = await query('SELECT id FROM urls WHERE id = $1 AND user_id = $2', [
+      urlId,
+      req.user.id,
+    ]);
 
-  if (urlCheck.rows.length === 0) {
-    return res.status(404).json({
-      success: false,
-      message: 'URL not found or access denied',
+    if (urlCheck.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'URL not found or access denied',
+      });
+    }
+
+    const clicks = await analyticsService.getRecentClicks(urlId, limit);
+
+    res.json({
+      success: true,
+      clicks,
     });
-  }
-
-  const clicks = await analyticsService.getRecentClicks(urlId, limit);
-
-  res.json({
-    success: true,
-    clicks,
-  });
-}));
+  })
+);
 
 /**
  * @swagger
@@ -317,47 +329,53 @@ router.get('/urls/:urlId/clicks', authenticateToken, asyncHandler(async (req, re
  *       404:
  *         description: URL not found or access denied
  */
-router.get('/export/:urlId', authenticateToken, asyncHandler(async (req, res) => {
-  const { urlId } = req.params;
-  const { format = 'json', timeRange = '30d' } = req.query;
+router.get(
+  '/export/:urlId',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const { urlId } = req.params;
+    const { format = 'json', timeRange = '30d' } = req.query;
 
-  // Validate format
-  if (!['json', 'csv'].includes(format)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid format. Supported formats: json, csv',
-    });
-  }
+    // Validate format
+    if (!['json', 'csv'].includes(format)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid format. Supported formats: json, csv',
+      });
+    }
 
-  const analytics = await analyticsService.getUrlAnalytics(urlId, req.user.id, timeRange);
+    const analytics = await analyticsService.getUrlAnalytics(urlId, req.user.id, timeRange);
 
-  if (format === 'csv') {
-    // Convert to CSV format
-    const csvData = [
-      ['Date', 'Clicks', 'Unique Clicks'],
-      ...analytics.clicksByDate.map(item => [
-        item.date,
-        item.clicks,
-        item.uniqueClicks,
-      ]),
-    ];
+    if (format === 'csv') {
+      // Convert to CSV format
+      const csvData = [
+        ['Date', 'Clicks', 'Unique Clicks'],
+        ...analytics.clicksByDate.map(item => [item.date, item.clicks, item.uniqueClicks]),
+      ];
 
-    const csvContent = csvData.map(row => row.join(',')).join('\n');
+      const csvContent = csvData.map(row => row.join(',')).join('\n');
 
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="analytics-${urlId}-${timeRange}.csv"`);
-    res.send(csvContent);
-  } else {
-    // JSON format
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename="analytics-${urlId}-${timeRange}.json"`);
-    res.json({
-      success: true,
-      analytics,
-      exportedAt: new Date().toISOString(),
-    });
-  }
-}));
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="analytics-${urlId}-${timeRange}.csv"`
+      );
+      res.send(csvContent);
+    } else {
+      // JSON format
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="analytics-${urlId}-${timeRange}.json"`
+      );
+      res.json({
+        success: true,
+        analytics,
+        exportedAt: new Date().toISOString(),
+      });
+    }
+  })
+);
 
 /**
  * @swagger
@@ -391,42 +409,42 @@ router.get('/export/:urlId', authenticateToken, asyncHandler(async (req, res) =>
  *       200:
  *         description: Top URLs retrieved successfully
  */
-router.get('/top-urls', authenticateToken, asyncHandler(async (req, res) => {
-  const {
-    limit = 10,
-    sortBy = 'clicks',
-    timeRange = '30d',
-  } = req.query;
+router.get(
+  '/top-urls',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const { limit = 10, sortBy = 'clicks', timeRange = '30d' } = req.query;
 
-  // Validate parameters
-  const validSortBy = ['clicks', 'unique_clicks', 'recent_activity'];
-  if (!validSortBy.includes(sortBy)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid sortBy parameter',
-    });
-  }
+    // Validate parameters
+    const validSortBy = ['clicks', 'unique_clicks', 'recent_activity'];
+    if (!validSortBy.includes(sortBy)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid sortBy parameter',
+      });
+    }
 
-  const limitNum = Math.min(parseInt(limit) || 10, 50);
+    const limitNum = Math.min(parseInt(limit) || 10, 50);
 
-  // Calculate date range
-  const dateRange = analyticsService.calculateDateRange(timeRange);
+    // Calculate date range
+    const dateRange = analyticsService.calculateDateRange(timeRange);
 
-  const { query } = require('../database/connection');
+    const { query } = require('../database/connection');
 
-  let orderByClause;
-  switch (sortBy) {
-  case 'unique_clicks':
-    orderByClause = 'unique_clicks DESC';
-    break;
-  case 'recent_activity':
-    orderByClause = 'last_accessed DESC NULLS LAST';
-    break;
-  default:
-    orderByClause = 'total_clicks DESC';
-  }
+    let orderByClause;
+    switch (sortBy) {
+      case 'unique_clicks':
+        orderByClause = 'unique_clicks DESC';
+        break;
+      case 'recent_activity':
+        orderByClause = 'last_accessed DESC NULLS LAST';
+        break;
+      default:
+        orderByClause = 'total_clicks DESC';
+    }
 
-  const result = await query(`
+    const result = await query(
+      `
     SELECT 
       u.id,
       u.short_code,
@@ -445,28 +463,31 @@ router.get('/top-urls', authenticateToken, asyncHandler(async (req, res) => {
     GROUP BY u.id, u.short_code, u.original_url, u.title, u.click_count, u.last_accessed
     ORDER BY ${orderByClause}
     LIMIT $4
-  `, [req.user.id, dateRange.start, dateRange.end, limitNum]);
+  `,
+      [req.user.id, dateRange.start, dateRange.end, limitNum]
+    );
 
-  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-  const topUrls = result.rows.map(row => ({
-    id: row.id,
-    shortCode: row.short_code,
-    shortUrl: `${baseUrl}/${row.short_code}`,
-    originalUrl: row.original_url,
-    title: row.title,
-    totalClicks: parseInt(row.total_clicks),
-    clicksInRange: parseInt(row.clicks_in_range),
-    uniqueClicks: parseInt(row.unique_clicks),
-    lastAccessed: row.last_accessed,
-  }));
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const topUrls = result.rows.map(row => ({
+      id: row.id,
+      shortCode: row.short_code,
+      shortUrl: `${baseUrl}/${row.short_code}`,
+      originalUrl: row.original_url,
+      title: row.title,
+      totalClicks: parseInt(row.total_clicks),
+      clicksInRange: parseInt(row.clicks_in_range),
+      uniqueClicks: parseInt(row.unique_clicks),
+      lastAccessed: row.last_accessed,
+    }));
 
-  res.json({
-    success: true,
-    topUrls,
-    timeRange,
-    sortBy,
-    limit: limitNum,
-  });
-}));
+    res.json({
+      success: true,
+      topUrls,
+      timeRange,
+      sortBy,
+      limit: limitNum,
+    });
+  })
+);
 
 module.exports = router;

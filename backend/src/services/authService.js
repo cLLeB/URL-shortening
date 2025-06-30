@@ -19,10 +19,9 @@ class AuthService {
       const { email, password, firstName, lastName } = userData;
 
       // Check if user already exists
-      const existingUser = await query(
-        'SELECT id FROM users WHERE email = $1',
-        [email.toLowerCase()],
-      );
+      const existingUser = await query('SELECT id FROM users WHERE email = $1', [
+        email.toLowerCase(),
+      ]);
 
       if (existingUser.rows.length > 0) {
         throw new AppError('User with this email already exists', 409);
@@ -32,18 +31,21 @@ class AuthService {
       const passwordHash = await bcrypt.hash(password, this.bcryptRounds);
 
       // Create user
-      const result = await query(`
+      const result = await query(
+        `
         INSERT INTO users (email, password_hash, first_name, last_name, is_verified, is_active)
         VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id, email, first_name, last_name, role, is_verified, created_at
-      `, [
-        email.toLowerCase(),
-        passwordHash,
-        firstName || null,
-        lastName || null,
-        false, // Email verification required
-        true,
-      ]);
+      `,
+        [
+          email.toLowerCase(),
+          passwordHash,
+          firstName || null,
+          lastName || null,
+          false, // Email verification required
+          true,
+        ]
+      );
 
       const user = result.rows[0];
 
@@ -88,7 +90,7 @@ class AuthService {
       // Get user
       const result = await query(
         'SELECT id, email, password_hash, first_name, last_name, role, is_verified, is_active FROM users WHERE email = $1',
-        [normalizedEmail],
+        [normalizedEmail]
       );
 
       if (result.rows.length === 0) {
@@ -120,10 +122,7 @@ class AuthService {
       await this.storeRefreshToken(user.id, tokens.refreshToken, ipAddress, userAgent);
 
       // Update last login
-      await query(
-        'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
-        [user.id],
-      );
+      await query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
 
       logger.logBusinessEvent('User logged in', {
         userId: user.id,
@@ -161,12 +160,15 @@ class AuthService {
 
       // Check if refresh token exists in database
       const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-      const result = await query(`
+      const result = await query(
+        `
         SELECT us.user_id, u.email, u.first_name, u.last_name, u.role, u.is_verified, u.is_active
         FROM user_sessions us
         JOIN users u ON us.user_id = u.id
         WHERE us.refresh_token_hash = $1 AND us.is_active = true AND us.expires_at > CURRENT_TIMESTAMP
-      `, [tokenHash]);
+      `,
+        [tokenHash]
+      );
 
       if (result.rows.length === 0) {
         throw new AppError('Invalid or expired refresh token', 401);
@@ -183,25 +185,28 @@ class AuthService {
       const tokens = generateTokens(user.user_id);
 
       // Store new refresh token and invalidate old one
-      await transaction(async (client) => {
+      await transaction(async client => {
         // Invalidate old refresh token
         await client.query(
           'UPDATE user_sessions SET is_active = false WHERE refresh_token_hash = $1',
-          [tokenHash],
+          [tokenHash]
         );
 
         // Store new refresh token
         const newTokenHash = crypto.createHash('sha256').update(tokens.refreshToken).digest('hex');
-        await client.query(`
+        await client.query(
+          `
           INSERT INTO user_sessions (user_id, refresh_token_hash, ip_address, user_agent, expires_at)
           VALUES ($1, $2, $3, $4, $5)
-        `, [
-          user.user_id,
-          newTokenHash,
-          ipAddress,
-          userAgent,
-          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-        ]);
+        `,
+          [
+            user.user_id,
+            newTokenHash,
+            ipAddress,
+            userAgent,
+            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          ]
+        );
       });
 
       logger.logBusinessEvent('Token refreshed', {
@@ -240,10 +245,9 @@ class AuthService {
       const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
 
       // Invalidate refresh token
-      await query(
-        'UPDATE user_sessions SET is_active = false WHERE refresh_token_hash = $1',
-        [tokenHash],
-      );
+      await query('UPDATE user_sessions SET is_active = false WHERE refresh_token_hash = $1', [
+        tokenHash,
+      ]);
 
       return true;
     } catch (error) {
@@ -259,10 +263,13 @@ class AuthService {
       const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-      await query(`
+      await query(
+        `
         INSERT INTO user_sessions (user_id, refresh_token_hash, ip_address, user_agent, expires_at)
         VALUES ($1, $2, $3, $4, $5)
-      `, [userId, tokenHash, ipAddress, userAgent, expiresAt]);
+      `,
+        [userId, tokenHash, ipAddress, userAgent, expiresAt]
+      );
     } catch (error) {
       logger.error('Error storing refresh token:', error);
       throw error;
@@ -280,7 +287,7 @@ class AuthService {
         if (timeRemaining > 0) {
           throw new AppError(
             `Account temporarily locked due to too many failed login attempts. Try again in ${Math.ceil(timeRemaining / 60)} minutes.`,
-            429,
+            429
           );
         } else {
           // Lockout expired, clear it
@@ -298,13 +305,13 @@ class AuthService {
   async recordFailedLogin(email, ipAddress) {
     try {
       const lockoutKey = `lockout:${email}:${ipAddress}`;
-      const lockoutData = await get(lockoutKey) || { attempts: 0 };
+      const lockoutData = (await get(lockoutKey)) || { attempts: 0 };
 
       lockoutData.attempts += 1;
       lockoutData.lastAttempt = Date.now();
 
       if (lockoutData.attempts >= this.maxLoginAttempts) {
-        lockoutData.lockedUntil = Date.now() + (this.lockoutDuration * 1000);
+        lockoutData.lockedUntil = Date.now() + this.lockoutDuration * 1000;
 
         logger.logSecurityEvent('Account locked due to failed login attempts', {
           email,
@@ -333,10 +340,7 @@ class AuthService {
   async changePassword(userId, currentPassword, newPassword) {
     try {
       // Get current password hash
-      const result = await query(
-        'SELECT password_hash FROM users WHERE id = $1',
-        [userId],
-      );
+      const result = await query('SELECT password_hash FROM users WHERE id = $1', [userId]);
 
       if (result.rows.length === 0) {
         throw new AppError('User not found', 404);
@@ -356,14 +360,11 @@ class AuthService {
       // Update password
       await query(
         'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-        [newPasswordHash, userId],
+        [newPasswordHash, userId]
       );
 
       // Invalidate all user sessions except current one
-      await query(
-        'UPDATE user_sessions SET is_active = false WHERE user_id = $1',
-        [userId],
-      );
+      await query('UPDATE user_sessions SET is_active = false WHERE user_id = $1', [userId]);
 
       logger.logBusinessEvent('Password changed', {
         userId,
@@ -380,13 +381,16 @@ class AuthService {
   // Get user profile
   async getUserProfile(userId) {
     try {
-      const result = await query(`
+      const result = await query(
+        `
         SELECT 
           id, email, first_name, last_name, role, is_verified, is_active,
           created_at, updated_at, last_login
         FROM users 
         WHERE id = $1
-      `, [userId]);
+      `,
+        [userId]
+      );
 
       if (result.rows.length === 0) {
         throw new AppError('User not found', 404);
@@ -436,12 +440,15 @@ class AuthService {
       paramCount++;
       params.push(userId);
 
-      const result = await query(`
+      const result = await query(
+        `
         UPDATE users 
         SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
         WHERE id = $${paramCount}
         RETURNING id, email, first_name, last_name, role, is_verified, updated_at
-      `, params);
+      `,
+        params
+      );
 
       if (result.rows.length === 0) {
         throw new AppError('User not found', 404);

@@ -10,7 +10,7 @@ const handleRedirect = async (req, res) => {
 
     // Apply rate limiting
     await new Promise((resolve, reject) => {
-      redirectLimiter(req, res, (err) => {
+      redirectLimiter(req, res, err => {
         if (err) reject(err);
         else resolve();
       });
@@ -129,7 +129,6 @@ const handleRedirect = async (req, res) => {
 
     // Perform the redirect
     res.redirect(301, urlData.originalUrl);
-
   } catch (error) {
     logger.error('Redirect error:', {
       error: error.message,

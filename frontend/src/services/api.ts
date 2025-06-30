@@ -17,7 +17,7 @@ import {
   AnalyticsFilters,
   ApiResponse,
   ApiError,
-  Pagination
+  Pagination,
 } from '../types';
 
 class ApiService {
@@ -26,7 +26,7 @@ class ApiService {
 
   constructor() {
     this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-    
+
     this.api = axios.create({
       baseURL: this.baseURL,
       timeout: 10000,
@@ -41,19 +41,19 @@ class ApiService {
   private setupInterceptors() {
     // Request interceptor to add auth token
     this.api.interceptors.request.use(
-      (config) => {
+      config => {
         const token = localStorage.getItem('accessToken');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
       },
-      (error) => Promise.reject(error)
+      error => Promise.reject(error)
     );
 
     // Response interceptor to handle token refresh
     this.api.interceptors.response.use(
-      (response) => response,
+      response => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as any;
 
@@ -65,10 +65,10 @@ class ApiService {
             if (refreshToken) {
               const response = await this.refreshToken(refreshToken);
               const { accessToken } = response.tokens;
-              
+
               localStorage.setItem('accessToken', accessToken);
               originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-              
+
               return this.api(originalRequest);
             }
           } catch (refreshError) {
@@ -111,20 +111,20 @@ class ApiService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const response: AxiosResponse<AuthResponse> = await this.api.post('/auth/login', credentials);
     const { tokens } = response.data;
-    
+
     localStorage.setItem('accessToken', tokens.accessToken);
     localStorage.setItem('refreshToken', tokens.refreshToken);
-    
+
     return response.data;
   }
 
   async register(data: RegisterData): Promise<AuthResponse> {
     const response: AxiosResponse<AuthResponse> = await this.api.post('/auth/register', data);
     const { tokens } = response.data;
-    
+
     localStorage.setItem('accessToken', tokens.accessToken);
     localStorage.setItem('refreshToken', tokens.refreshToken);
-    
+
     return response.data;
   }
 
@@ -132,17 +132,17 @@ class ApiService {
     const response: AxiosResponse<AuthResponse> = await this.api.post('/auth/refresh', {
       refreshToken,
     });
-    
+
     const { tokens } = response.data;
     localStorage.setItem('accessToken', tokens.accessToken);
     localStorage.setItem('refreshToken', tokens.refreshToken);
-    
+
     return response.data;
   }
 
   async logout(): Promise<void> {
     const refreshToken = localStorage.getItem('refreshToken');
-    
+
     try {
       await this.api.post('/auth/logout', { refreshToken });
     } catch (error) {
@@ -177,9 +177,12 @@ class ApiService {
   }
 
   async getUrls(filters: UrlFilters = {}): Promise<{ urls: Url[]; pagination: Pagination }> {
-    const response: AxiosResponse<{ urls: Url[]; pagination: Pagination }> = await this.api.get('/urls', {
-      params: filters,
-    });
+    const response: AxiosResponse<{ urls: Url[]; pagination: Pagination }> = await this.api.get(
+      '/urls',
+      {
+        params: filters,
+      }
+    );
     return response.data;
   }
 
@@ -199,23 +202,32 @@ class ApiService {
 
   // Analytics methods
   async getUserAnalytics(timeRange: string = '30d'): Promise<UserAnalytics> {
-    const response: AxiosResponse<{ analytics: UserAnalytics }> = await this.api.get('/analytics/overview', {
-      params: { timeRange },
-    });
+    const response: AxiosResponse<{ analytics: UserAnalytics }> = await this.api.get(
+      '/analytics/overview',
+      {
+        params: { timeRange },
+      }
+    );
     return response.data.analytics;
   }
 
   async getUrlAnalytics(urlId: string, timeRange: string = '30d'): Promise<UrlAnalytics> {
-    const response: AxiosResponse<{ analytics: UrlAnalytics }> = await this.api.get(`/analytics/urls/${urlId}`, {
-      params: { timeRange },
-    });
+    const response: AxiosResponse<{ analytics: UrlAnalytics }> = await this.api.get(
+      `/analytics/urls/${urlId}`,
+      {
+        params: { timeRange },
+      }
+    );
     return response.data.analytics;
   }
 
   async getUrlClicks(urlId: string, limit: number = 20): Promise<ClickData[]> {
-    const response: AxiosResponse<{ clicks: ClickData[] }> = await this.api.get(`/analytics/urls/${urlId}/clicks`, {
-      params: { limit },
-    });
+    const response: AxiosResponse<{ clicks: ClickData[] }> = await this.api.get(
+      `/analytics/urls/${urlId}/clicks`,
+      {
+        params: { limit },
+      }
+    );
     return response.data.clicks;
   }
 
@@ -226,7 +238,11 @@ class ApiService {
     return response.data.topUrls;
   }
 
-  async exportAnalytics(urlId: string, format: 'json' | 'csv' = 'json', timeRange: string = '30d'): Promise<Blob> {
+  async exportAnalytics(
+    urlId: string,
+    format: 'json' | 'csv' = 'json',
+    timeRange: string = '30d'
+  ): Promise<Blob> {
     const response = await this.api.get(`/analytics/export/${urlId}`, {
       params: { format, timeRange },
       responseType: 'blob',
@@ -241,7 +257,8 @@ class ApiService {
   }
 
   async getUserSessions(): Promise<UserSession[]> {
-    const response: AxiosResponse<{ sessions: UserSession[] }> = await this.api.get('/users/sessions');
+    const response: AxiosResponse<{ sessions: UserSession[] }> =
+      await this.api.get('/users/sessions');
     return response.data.sessions;
   }
 
@@ -250,9 +267,12 @@ class ApiService {
   }
 
   async getUserActivity(limit: number = 20): Promise<UserActivity[]> {
-    const response: AxiosResponse<{ activities: UserActivity[] }> = await this.api.get('/users/activity', {
-      params: { limit },
-    });
+    const response: AxiosResponse<{ activities: UserActivity[] }> = await this.api.get(
+      '/users/activity',
+      {
+        params: { limit },
+      }
+    );
     return response.data.activities;
   }
 

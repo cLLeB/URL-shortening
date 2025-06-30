@@ -129,7 +129,7 @@ describe('ApiService', () => {
     describe('logout', () => {
       it('should logout and clear tokens', async () => {
         localStorage.setItem('refreshToken', 'refresh-token');
-        
+
         mockAxiosInstance.post.mockResolvedValue({ data: { success: true } });
 
         await apiService.logout();
@@ -143,7 +143,7 @@ describe('ApiService', () => {
 
       it('should clear tokens even if logout request fails', async () => {
         localStorage.setItem('refreshToken', 'refresh-token');
-        
+
         mockAxiosInstance.post.mockRejectedValue(new Error('Network error'));
 
         await apiService.logout();
@@ -306,12 +306,13 @@ describe('ApiService', () => {
 
       mockAxiosInstance.post.mockRejectedValue(mockError);
 
-      await expect(apiService.login({ email: 'test@example.com', password: 'password' }))
-        .rejects.toEqual({
-          success: false,
-          message: 'Network error. Please check your connection.',
-          status: 0,
-        });
+      await expect(
+        apiService.login({ email: 'test@example.com', password: 'password' })
+      ).rejects.toEqual({
+        success: false,
+        message: 'Network error. Please check your connection.',
+        status: 0,
+      });
     });
 
     it('should handle generic errors', async () => {
@@ -321,11 +322,12 @@ describe('ApiService', () => {
 
       mockAxiosInstance.post.mockRejectedValue(mockError);
 
-      await expect(apiService.login({ email: 'test@example.com', password: 'password' }))
-        .rejects.toEqual({
-          success: false,
-          message: 'Something went wrong',
-        });
+      await expect(
+        apiService.login({ email: 'test@example.com', password: 'password' })
+      ).rejects.toEqual({
+        success: false,
+        message: 'Something went wrong',
+      });
     });
   });
 });

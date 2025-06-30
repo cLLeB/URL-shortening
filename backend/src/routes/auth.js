@@ -10,9 +10,14 @@ const router = express.Router();
 // Validation schemas
 const registerSchema = Joi.object({
   email: Joi.string().email().required().max(255),
-  password: Joi.string().min(8).max(128).required()
+  password: Joi.string()
+    .min(8)
+    .max(128)
+    .required()
     .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]'))
-    .message('Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character'),
+    .message(
+      'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character'
+    ),
   firstName: Joi.string().max(100).optional(),
   lastName: Joi.string().max(100).optional(),
 });
@@ -24,9 +29,14 @@ const loginSchema = Joi.object({
 
 const changePasswordSchema = Joi.object({
   currentPassword: Joi.string().required(),
-  newPassword: Joi.string().min(8).max(128).required()
+  newPassword: Joi.string()
+    .min(8)
+    .max(128)
+    .required()
     .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]'))
-    .message('Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character'),
+    .message(
+      'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character'
+    ),
 });
 
 const updateProfileSchema = Joi.object({
@@ -113,26 +123,30 @@ const updateProfileSchema = Joi.object({
  *       409:
  *         description: User already exists
  */
-router.post('/register', authLimiter, asyncHandler(async (req, res) => {
-  // Validate request body
-  const { error, value } = registerSchema.validate(req.body);
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: error.details.map(detail => detail.message),
+router.post(
+  '/register',
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    // Validate request body
+    const { error, value } = registerSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.details.map(detail => detail.message),
+      });
+    }
+
+    const result = await authService.register(value);
+
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      user: result.user,
+      tokens: result.tokens,
     });
-  }
-
-  const result = await authService.register(value);
-
-  res.status(201).json({
-    success: true,
-    message: 'User registered successfully',
-    user: result.user,
-    tokens: result.tokens,
-  });
-}));
+  })
+);
 
 /**
  * @swagger
@@ -167,27 +181,31 @@ router.post('/register', authLimiter, asyncHandler(async (req, res) => {
  *       429:
  *         description: Too many login attempts
  */
-router.post('/login', authLimiter, asyncHandler(async (req, res) => {
-  // Validate request body
-  const { error, value } = loginSchema.validate(req.body);
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: error.details.map(detail => detail.message),
+router.post(
+  '/login',
+  authLimiter,
+  asyncHandler(async (req, res) => {
+    // Validate request body
+    const { error, value } = loginSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.details.map(detail => detail.message),
+      });
+    }
+
+    const { email, password } = value;
+    const result = await authService.login(email, password, req.ip, req.get('User-Agent'));
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      user: result.user,
+      tokens: result.tokens,
     });
-  }
-
-  const { email, password } = value;
-  const result = await authService.login(email, password, req.ip, req.get('User-Agent'));
-
-  res.json({
-    success: true,
-    message: 'Login successful',
-    user: result.user,
-    tokens: result.tokens,
-  });
-}));
+  })
+);
 
 /**
  * @swagger
@@ -216,25 +234,28 @@ router.post('/login', authLimiter, asyncHandler(async (req, res) => {
  *       401:
  *         description: Invalid refresh token
  */
-router.post('/refresh', asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body;
+router.post(
+  '/refresh',
+  asyncHandler(async (req, res) => {
+    const { refreshToken } = req.body;
 
-  if (!refreshToken) {
-    return res.status(400).json({
-      success: false,
-      message: 'Refresh token is required',
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Refresh token is required',
+      });
+    }
+
+    const result = await authService.refreshToken(refreshToken, req.ip, req.get('User-Agent'));
+
+    res.json({
+      success: true,
+      message: 'Token refreshed successfully',
+      user: result.user,
+      tokens: result.tokens,
     });
-  }
-
-  const result = await authService.refreshToken(refreshToken, req.ip, req.get('User-Agent'));
-
-  res.json({
-    success: true,
-    message: 'Token refreshed successfully',
-    user: result.user,
-    tokens: result.tokens,
-  });
-}));
+  })
+);
 
 /**
  * @swagger
@@ -256,16 +277,20 @@ router.post('/refresh', asyncHandler(async (req, res) => {
  *       200:
  *         description: Logout successful
  */
-router.post('/logout', authenticateToken, asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body;
+router.post(
+  '/logout',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const { refreshToken } = req.body;
 
-  await authService.logout(refreshToken);
+    await authService.logout(refreshToken);
 
-  res.json({
-    success: true,
-    message: 'Logout successful',
-  });
-}));
+    res.json({
+      success: true,
+      message: 'Logout successful',
+    });
+  })
+);
 
 /**
  * @swagger
@@ -288,14 +313,18 @@ router.post('/logout', authenticateToken, asyncHandler(async (req, res) => {
  *                 user:
  *                   $ref: '#/components/schemas/User'
  */
-router.get('/profile', authenticateToken, asyncHandler(async (req, res) => {
-  const user = await authService.getUserProfile(req.user.id);
+router.get(
+  '/profile',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const user = await authService.getUserProfile(req.user.id);
 
-  res.json({
-    success: true,
-    user,
-  });
-}));
+    res.json({
+      success: true,
+      user,
+    });
+  })
+);
 
 /**
  * @swagger
@@ -320,25 +349,29 @@ router.get('/profile', authenticateToken, asyncHandler(async (req, res) => {
  *       200:
  *         description: Profile updated successfully
  */
-router.put('/profile', authenticateToken, asyncHandler(async (req, res) => {
-  // Validate request body
-  const { error, value } = updateProfileSchema.validate(req.body);
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: error.details.map(detail => detail.message),
+router.put(
+  '/profile',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    // Validate request body
+    const { error, value } = updateProfileSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.details.map(detail => detail.message),
+      });
+    }
+
+    const user = await authService.updateUserProfile(req.user.id, value);
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      user,
     });
-  }
-
-  const user = await authService.updateUserProfile(req.user.id, value);
-
-  res.json({
-    success: true,
-    message: 'Profile updated successfully',
-    user,
-  });
-}));
+  })
+);
 
 /**
  * @swagger
@@ -369,24 +402,28 @@ router.put('/profile', authenticateToken, asyncHandler(async (req, res) => {
  *       400:
  *         description: Invalid current password
  */
-router.post('/change-password', authenticateToken, asyncHandler(async (req, res) => {
-  // Validate request body
-  const { error, value } = changePasswordSchema.validate(req.body);
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: error.details.map(detail => detail.message),
+router.post(
+  '/change-password',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    // Validate request body
+    const { error, value } = changePasswordSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.details.map(detail => detail.message),
+      });
+    }
+
+    const { currentPassword, newPassword } = value;
+    await authService.changePassword(req.user.id, currentPassword, newPassword);
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully',
     });
-  }
-
-  const { currentPassword, newPassword } = value;
-  await authService.changePassword(req.user.id, currentPassword, newPassword);
-
-  res.json({
-    success: true,
-    message: 'Password changed successfully',
-  });
-}));
+  })
+);
 
 module.exports = router;

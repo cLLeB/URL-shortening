@@ -33,7 +33,7 @@ async function connectRedis() {
     });
 
     // Error handling
-    client.on('error', (err) => {
+    client.on('error', err => {
       logger.error('Redis Client Error:', err);
     });
 

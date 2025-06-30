@@ -28,7 +28,7 @@ async function connectDatabase() {
     logger.info('Database connection established successfully');
 
     // Handle pool errors
-    pool.on('error', (err) => {
+    pool.on('error', err => {
       logger.error('Unexpected error on idle client', err);
     });
 

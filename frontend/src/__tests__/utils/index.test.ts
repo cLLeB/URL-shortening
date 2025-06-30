@@ -31,7 +31,8 @@ import {
 // Mock navigator
 Object.defineProperty(navigator, 'userAgent', {
   writable: true,
-  value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+  value:
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
 });
 
 describe('Utils', () => {
@@ -235,15 +236,15 @@ describe('Utils', () => {
     describe('getFromStorage', () => {
       it('should get value from localStorage', () => {
         localStorage.setItem('test-key', JSON.stringify({ value: 'test' }));
-        
+
         const result = getFromStorage('test-key', { value: 'default' });
-        
+
         expect(result).toEqual({ value: 'test' });
       });
 
       it('should return default value when key does not exist', () => {
         const result = getFromStorage('non-existent-key', { value: 'default' });
-        
+
         expect(result).toEqual({ value: 'default' });
       });
     });
@@ -251,9 +252,9 @@ describe('Utils', () => {
     describe('setToStorage', () => {
       it('should set value in localStorage', () => {
         const testValue = { value: 'test' };
-        
+
         setToStorage('test-key', testValue);
-        
+
         expect(localStorage.setItem).toHaveBeenCalledWith('test-key', JSON.stringify(testValue));
       });
     });
@@ -261,7 +262,7 @@ describe('Utils', () => {
     describe('removeFromStorage', () => {
       it('should remove value from localStorage', () => {
         removeFromStorage('test-key');
-        
+
         expect(localStorage.removeItem).toHaveBeenCalledWith('test-key');
       });
     });
@@ -387,7 +388,8 @@ describe('Utils', () => {
     describe('getBrowserName', () => {
       it('should detect Chrome', () => {
         Object.defineProperty(navigator, 'userAgent', {
-          value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          value:
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
           writable: true,
         });
 

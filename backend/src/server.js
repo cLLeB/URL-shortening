@@ -24,17 +24,21 @@ const PORT = process.env.PORT || 5000;
 app.set('trust proxy', 1);
 
 // Security middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-}));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 
 // CORS configuration
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  })
+);
 
 // Compression middleware
 app.use(compression());
@@ -45,11 +49,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Logging middleware
 if (process.env.NODE_ENV !== 'test') {
-  app.use(morgan('combined', {
-    stream: {
-      write: (message) => logger.info(message.trim()),
-    },
-  }));
+  app.use(
+    morgan('combined', {
+      stream: {
+        write: message => logger.info(message.trim()),
+      },
+    })
+  );
 }
 
 // Rate limiting
@@ -165,22 +171,22 @@ async function startServer() {
     });
 
     // Handle server errors
-    server.on('error', (error) => {
+    server.on('error', error => {
       if (error.syscall !== 'listen') {
         throw error;
       }
 
       switch (error.code) {
-      case 'EACCES':
-        logger.error(`Port ${PORT} requires elevated privileges`);
-        process.exit(1);
-        break;
-      case 'EADDRINUSE':
-        logger.error(`Port ${PORT} is already in use`);
-        process.exit(1);
-        break;
-      default:
-        throw error;
+        case 'EACCES':
+          logger.error(`Port ${PORT} requires elevated privileges`);
+          process.exit(1);
+          break;
+        case 'EADDRINUSE':
+          logger.error(`Port ${PORT} is already in use`);
+          process.exit(1);
+          break;
+        default:
+          throw error;
       }
     });
 

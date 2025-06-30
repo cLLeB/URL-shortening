@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 
 // Simple component for testing
 const TestComponent: React.FC = () => {
-  return <div data-testid="test-component">Hello World</div>;
+  return <div data-testid='test-component'>Hello World</div>;
 };
 
 describe('Basic Tests', () => {

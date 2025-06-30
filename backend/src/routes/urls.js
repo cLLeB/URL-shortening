@@ -9,7 +9,10 @@ const router = express.Router();
 
 // Validation schemas
 const createUrlSchema = Joi.object({
-  originalUrl: Joi.string().uri({ scheme: ['http', 'https'] }).required().max(2048),
+  originalUrl: Joi.string()
+    .uri({ scheme: ['http', 'https'] })
+    .required()
+    .max(2048),
   customAlias: Joi.string().alphanum().min(3).max(50).optional(),
   title: Joi.string().max(500).optional(),
   description: Joi.string().max(1000).optional(),
@@ -28,7 +31,9 @@ const updateUrlSchema = Joi.object({
 const getUrlsSchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
-  sortBy: Joi.string().valid('created_at', 'updated_at', 'click_count', 'title').default('created_at'),
+  sortBy: Joi.string()
+    .valid('created_at', 'updated_at', 'click_count', 'title')
+    .default('created_at'),
   sortOrder: Joi.string().valid('ASC', 'DESC').default('DESC'),
   search: Joi.string().max(100).optional(),
   isActive: Joi.boolean().optional(),
@@ -130,31 +135,37 @@ const getUrlsSchema = Joi.object({
  *       429:
  *         description: Rate limit exceeded
  */
-router.post('/', optionalAuth, urlCreationLimiter, urlQuotaCheck, asyncHandler(async (req, res) => {
-  // Validate request body
-  const { error, value } = createUrlSchema.validate(req.body);
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: error.details.map(detail => detail.message),
+router.post(
+  '/',
+  optionalAuth,
+  urlCreationLimiter,
+  urlQuotaCheck,
+  asyncHandler(async (req, res) => {
+    // Validate request body
+    const { error, value } = createUrlSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.details.map(detail => detail.message),
+      });
+    }
+
+    const urlData = {
+      ...value,
+      userId: req.user?.id,
+    };
+
+    const url = await urlService.createUrl(urlData);
+
+    res.status(201).json({
+      success: true,
+      message: 'URL created successfully',
+      url,
+      quota: req.quota,
     });
-  }
-
-  const urlData = {
-    ...value,
-    userId: req.user?.id,
-  };
-
-  const url = await urlService.createUrl(urlData);
-
-  res.status(201).json({
-    success: true,
-    message: 'URL created successfully',
-    url,
-    quota: req.quota,
-  });
-}));
+  })
+);
 
 /**
  * @swagger
@@ -229,25 +240,29 @@ router.post('/', optionalAuth, urlCreationLimiter, urlQuotaCheck, asyncHandler(a
  *                     hasPrev:
  *                       type: boolean
  */
-router.get('/', authenticateToken, asyncHandler(async (req, res) => {
-  // Validate query parameters
-  const { error, value } = getUrlsSchema.validate(req.query);
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: error.details.map(detail => detail.message),
+router.get(
+  '/',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    // Validate query parameters
+    const { error, value } = getUrlsSchema.validate(req.query);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.details.map(detail => detail.message),
+      });
+    }
+
+    const result = await urlService.getUserUrls(req.user.id, value);
+
+    res.json({
+      success: true,
+      urls: result.urls,
+      pagination: result.pagination,
     });
-  }
-
-  const result = await urlService.getUserUrls(req.user.id, value);
-
-  res.json({
-    success: true,
-    urls: result.urls,
-    pagination: result.pagination,
-  });
-}));
+  })
+);
 
 /**
  * @swagger
@@ -279,46 +294,50 @@ router.get('/', authenticateToken, asyncHandler(async (req, res) => {
  *       404:
  *         description: URL not found
  */
-router.get('/:id', authenticateToken, asyncHandler(async (req, res) => {
-  const { id } = req.params;
+router.get(
+  '/:id',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
 
-  // Get URL from database to check ownership
-  const { query } = require('../database/connection');
-  const result = await query(
-    'SELECT * FROM urls WHERE id = $1 AND user_id = $2',
-    [id, req.user.id],
-  );
+    // Get URL from database to check ownership
+    const { query } = require('../database/connection');
+    const result = await query('SELECT * FROM urls WHERE id = $1 AND user_id = $2', [
+      id,
+      req.user.id,
+    ]);
 
-  if (result.rows.length === 0) {
-    return res.status(404).json({
-      success: false,
-      message: 'URL not found',
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'URL not found',
+      });
+    }
+
+    const url = result.rows[0];
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+
+    res.json({
+      success: true,
+      url: {
+        id: url.id,
+        originalUrl: url.original_url,
+        shortCode: url.short_code,
+        shortUrl: `${baseUrl}/${url.short_code}`,
+        customAlias: url.custom_alias,
+        title: url.title,
+        description: url.description,
+        isActive: url.is_active,
+        isPublic: url.is_public,
+        clickCount: url.click_count,
+        createdAt: url.created_at,
+        updatedAt: url.updated_at,
+        expiresAt: url.expires_at,
+        lastAccessed: url.last_accessed,
+      },
     });
-  }
-
-  const url = result.rows[0];
-  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-
-  res.json({
-    success: true,
-    url: {
-      id: url.id,
-      originalUrl: url.original_url,
-      shortCode: url.short_code,
-      shortUrl: `${baseUrl}/${url.short_code}`,
-      customAlias: url.custom_alias,
-      title: url.title,
-      description: url.description,
-      isActive: url.is_active,
-      isPublic: url.is_public,
-      clickCount: url.click_count,
-      createdAt: url.created_at,
-      updatedAt: url.updated_at,
-      expiresAt: url.expires_at,
-      lastAccessed: url.last_accessed,
-    },
-  });
-}));
+  })
+);
 
 /**
  * @swagger
@@ -372,27 +391,31 @@ router.get('/:id', authenticateToken, asyncHandler(async (req, res) => {
  *       404:
  *         description: URL not found
  */
-router.put('/:id', authenticateToken, asyncHandler(async (req, res) => {
-  const { id } = req.params;
+router.put(
+  '/:id',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
 
-  // Validate request body
-  const { error, value } = updateUrlSchema.validate(req.body);
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: error.details.map(detail => detail.message),
+    // Validate request body
+    const { error, value } = updateUrlSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.details.map(detail => detail.message),
+      });
+    }
+
+    const url = await urlService.updateUrl(id, req.user.id, value);
+
+    res.json({
+      success: true,
+      message: 'URL updated successfully',
+      url,
     });
-  }
-
-  const url = await urlService.updateUrl(id, req.user.id, value);
-
-  res.json({
-    success: true,
-    message: 'URL updated successfully',
-    url,
-  });
-}));
+  })
+);
 
 /**
  * @swagger
@@ -415,15 +438,19 @@ router.put('/:id', authenticateToken, asyncHandler(async (req, res) => {
  *       404:
  *         description: URL not found
  */
-router.delete('/:id', authenticateToken, asyncHandler(async (req, res) => {
-  const { id } = req.params;
+router.delete(
+  '/:id',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
 
-  await urlService.deleteUrl(id, req.user.id);
+    await urlService.deleteUrl(id, req.user.id);
 
-  res.json({
-    success: true,
-    message: 'URL deleted successfully',
-  });
-}));
+    res.json({
+      success: true,
+      message: 'URL deleted successfully',
+    });
+  })
+);
 
 module.exports = router;

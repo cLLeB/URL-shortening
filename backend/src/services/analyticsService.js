@@ -55,25 +55,28 @@ class AnalyticsService {
       }
 
       // Insert click record
-      const result = await query(`
+      const result = await query(
+        `
         INSERT INTO url_clicks (
           url_id, ip_address, user_agent, referer, country, region, city,
           device_type, browser, os, is_bot
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING id, clicked_at
-      `, [
-        urlId,
-        ipAddress,
-        userAgent,
-        referer,
-        geoData.country,
-        geoData.region,
-        geoData.city,
-        deviceData.deviceType,
-        deviceData.browser,
-        deviceData.os,
-        deviceData.isBot,
-      ]);
+      `,
+        [
+          urlId,
+          ipAddress,
+          userAgent,
+          referer,
+          geoData.country,
+          geoData.region,
+          geoData.city,
+          deviceData.deviceType,
+          deviceData.browser,
+          deviceData.os,
+          deviceData.isBot,
+        ]
+      );
 
       const clickId = result.rows[0].id;
 
@@ -114,9 +117,22 @@ class AnalyticsService {
   // Detect if user agent is a bot
   detectBot(userAgent) {
     const botPatterns = [
-      'bot', 'crawler', 'spider', 'scraper', 'curl', 'wget', 'python',
-      'googlebot', 'bingbot', 'slurp', 'duckduckbot', 'baiduspider',
-      'yandexbot', 'facebookexternalhit', 'twitterbot', 'linkedinbot',
+      'bot',
+      'crawler',
+      'spider',
+      'scraper',
+      'curl',
+      'wget',
+      'python',
+      'googlebot',
+      'bingbot',
+      'slurp',
+      'duckduckbot',
+      'baiduspider',
+      'yandexbot',
+      'facebookexternalhit',
+      'twitterbot',
+      'linkedinbot',
     ];
 
     const ua = userAgent.toLowerCase();
@@ -130,7 +146,7 @@ class AnalyticsService {
       if (userId) {
         const urlCheck = await query(
           'SELECT id FROM urls WHERE id = $1 AND (user_id = $2 OR is_public = true)',
-          [urlId, userId],
+          [urlId, userId]
         );
 
         if (urlCheck.rows.length === 0) {
@@ -149,13 +165,16 @@ class AnalyticsService {
       }
 
       // Get basic URL info
-      const urlInfo = await query(`
+      const urlInfo = await query(
+        `
         SELECT 
           u.short_code, u.original_url, u.title, u.click_count,
           u.created_at, u.last_accessed
         FROM urls u
         WHERE u.id = $1
-      `, [urlId]);
+      `,
+        [urlId]
+      );
 
       if (urlInfo.rows.length === 0) {
         throw new AppError('URL not found', 404);
@@ -214,7 +233,8 @@ class AnalyticsService {
   // Get clicks grouped by date
   async getClicksByDate(urlId, dateRange) {
     try {
-      const result = await query(`
+      const result = await query(
+        `
         SELECT 
           DATE(clicked_at) as date,
           COUNT(*) as clicks,
@@ -226,7 +246,9 @@ class AnalyticsService {
           AND is_bot = false
         GROUP BY DATE(clicked_at)
         ORDER BY date ASC
-      `, [urlId, dateRange.start, dateRange.end]);
+      `,
+        [urlId, dateRange.start, dateRange.end]
+      );
 
       return result.rows.map(row => ({
         date: row.date,
@@ -242,7 +264,8 @@ class AnalyticsService {
   // Get clicks grouped by country
   async getClicksByCountry(urlId, dateRange) {
     try {
-      const result = await query(`
+      const result = await query(
+        `
         SELECT 
           country,
           COUNT(*) as clicks,
@@ -256,7 +279,9 @@ class AnalyticsService {
         GROUP BY country
         ORDER BY clicks DESC
         LIMIT 20
-      `, [urlId, dateRange.start, dateRange.end]);
+      `,
+        [urlId, dateRange.start, dateRange.end]
+      );
 
       return result.rows.map(row => ({
         country: row.country,
@@ -272,7 +297,8 @@ class AnalyticsService {
   // Get clicks grouped by device type
   async getClicksByDevice(urlId, dateRange) {
     try {
-      const result = await query(`
+      const result = await query(
+        `
         SELECT 
           device_type,
           COUNT(*) as clicks,
@@ -284,7 +310,9 @@ class AnalyticsService {
           AND is_bot = false
         GROUP BY device_type
         ORDER BY clicks DESC
-      `, [urlId, dateRange.start, dateRange.end]);
+      `,
+        [urlId, dateRange.start, dateRange.end]
+      );
 
       return result.rows.map(row => ({
         deviceType: row.device_type,
@@ -300,7 +328,8 @@ class AnalyticsService {
   // Get clicks grouped by browser
   async getClicksByBrowser(urlId, dateRange) {
     try {
-      const result = await query(`
+      const result = await query(
+        `
         SELECT 
           browser,
           COUNT(*) as clicks,
@@ -313,7 +342,9 @@ class AnalyticsService {
         GROUP BY browser
         ORDER BY clicks DESC
         LIMIT 10
-      `, [urlId, dateRange.start, dateRange.end]);
+      `,
+        [urlId, dateRange.start, dateRange.end]
+      );
 
       return result.rows.map(row => ({
         browser: row.browser,
@@ -329,7 +360,8 @@ class AnalyticsService {
   // Get clicks grouped by referer
   async getClicksByReferer(urlId, dateRange) {
     try {
-      const result = await query(`
+      const result = await query(
+        `
         SELECT 
           CASE 
             WHEN referer = '' OR referer IS NULL THEN 'Direct'
@@ -344,7 +376,9 @@ class AnalyticsService {
         GROUP BY referer
         ORDER BY clicks DESC
         LIMIT 10
-      `, [urlId, dateRange.start, dateRange.end]);
+      `,
+        [urlId, dateRange.start, dateRange.end]
+      );
 
       return result.rows.map(row => ({
         referer: row.referer,
@@ -359,7 +393,8 @@ class AnalyticsService {
   // Get recent clicks
   async getRecentClicks(urlId, limit = 10) {
     try {
-      const result = await query(`
+      const result = await query(
+        `
         SELECT 
           clicked_at, ip_address, country, city, device_type, 
           browser, os, referer, is_bot
@@ -367,7 +402,9 @@ class AnalyticsService {
         WHERE url_id = $1
         ORDER BY clicked_at DESC
         LIMIT $2
-      `, [urlId, limit]);
+      `,
+        [urlId, limit]
+      );
 
       return result.rows.map(row => ({
         clickedAt: row.clicked_at,
@@ -392,23 +429,23 @@ class AnalyticsService {
     const start = new Date();
 
     switch (timeRange) {
-    case '24h':
-      start.setHours(start.getHours() - 24);
-      break;
-    case '7d':
-      start.setDate(start.getDate() - 7);
-      break;
-    case '30d':
-      start.setDate(start.getDate() - 30);
-      break;
-    case '90d':
-      start.setDate(start.getDate() - 90);
-      break;
-    case '1y':
-      start.setFullYear(start.getFullYear() - 1);
-      break;
-    default:
-      start.setDate(start.getDate() - 30);
+      case '24h':
+        start.setHours(start.getHours() - 24);
+        break;
+      case '7d':
+        start.setDate(start.getDate() - 7);
+        break;
+      case '30d':
+        start.setDate(start.getDate() - 30);
+        break;
+      case '90d':
+        start.setDate(start.getDate() - 90);
+        break;
+      case '1y':
+        start.setFullYear(start.getFullYear() - 1);
+        break;
+      default:
+        start.setDate(start.getDate() - 30);
     }
 
     return {
@@ -422,7 +459,8 @@ class AnalyticsService {
     try {
       const dateRange = this.calculateDateRange(timeRange);
 
-      const result = await query(`
+      const result = await query(
+        `
         SELECT 
           COUNT(DISTINCT u.id) as total_urls,
           SUM(u.click_count) as total_clicks,
@@ -435,7 +473,9 @@ class AnalyticsService {
           AND uc.clicked_at <= $3
           AND uc.is_bot = false
         WHERE u.user_id = $1 AND u.is_active = true
-      `, [userId, dateRange.start, dateRange.end]);
+      `,
+        [userId, dateRange.start, dateRange.end]
+      );
 
       const stats = result.rows[0];
 

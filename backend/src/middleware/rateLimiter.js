@@ -51,11 +51,11 @@ const generalLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   store: createRedisStore('general'),
-  keyGenerator: (req) => {
+  keyGenerator: req => {
     // Use user ID if authenticated, otherwise IP
     return req.user ? `user:${req.user.id}` : `ip:${req.ip}`;
   },
-  skip: (req) => {
+  skip: req => {
     // Skip rate limiting for admin users
     return req.user && req.user.role === 'admin';
   },
@@ -83,7 +83,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   store: createRedisStore('auth'),
-  keyGenerator: (req) => `auth:${req.ip}`,
+  keyGenerator: req => `auth:${req.ip}`,
   onLimitReached: (req, res, options) => {
     logger.logSecurityEvent('Authentication rate limit exceeded', {
       ip: req.ip,
@@ -97,7 +97,7 @@ const authLimiter = rateLimit({
 // URL creation rate limiter
 const urlCreationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: (req) => {
+  max: req => {
     // Different limits based on user role
     if (!req.user) return 10; // Anonymous users
     if (req.user.role === 'premium') return 1000;
@@ -112,10 +112,10 @@ const urlCreationLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   store: createRedisStore('url_creation'),
-  keyGenerator: (req) => {
+  keyGenerator: req => {
     return req.user ? `url_create:user:${req.user.id}` : `url_create:ip:${req.ip}`;
   },
-  skip: (req) => {
+  skip: req => {
     return req.user && req.user.role === 'admin';
   },
 });
@@ -127,10 +127,10 @@ const speedLimiter = slowDown({
   delayMs: 500, // begin adding 500ms of delay per request above 50
   maxDelayMs: 20000, // maximum delay of 20 seconds
   store: createRedisStore('slow'),
-  keyGenerator: (req) => {
+  keyGenerator: req => {
     return req.user ? `slow:user:${req.user.id}` : `slow:ip:${req.ip}`;
   },
-  skip: (req) => {
+  skip: req => {
     return req.user && req.user.role === 'admin';
   },
 });
@@ -144,7 +144,8 @@ const redirectLimiter = async (req, res, next) => {
 
     // Check general redirect rate (per IP/user)
     const clientCount = await incr(clientKey, 3600); // 1 hour window
-    if (clientCount > 1000) { // 1000 redirects per hour per client
+    if (clientCount > 1000) {
+      // 1000 redirects per hour per client
       return res.status(429).json({
         success: false,
         message: 'Too many redirects, please try again later.',
@@ -153,7 +154,8 @@ const redirectLimiter = async (req, res, next) => {
 
     // Check specific URL redirect rate (prevent spam clicking)
     const urlCount = await incr(urlKey, 60); // 1 minute window
-    if (urlCount > 10) { // 10 redirects per minute per URL per IP
+    if (urlCount > 10) {
+      // 10 redirects per minute per URL per IP
       return res.status(429).json({
         success: false,
         message: 'Too many redirects for this URL, please wait a moment.',
@@ -181,7 +183,7 @@ const apiKeyLimiter = async (req, res, next) => {
     const { query } = require('../database/connection');
     const result = await query(
       'SELECT id, user_id, rate_limit, is_active FROM api_keys WHERE key_hash = $1',
-      [require('crypto').createHash('sha256').update(apiKey).digest('hex')],
+      [require('crypto').createHash('sha256').update(apiKey).digest('hex')]
     );
 
     if (result.rows.length === 0 || !result.rows[0].is_active) {
@@ -208,10 +210,7 @@ const apiKeyLimiter = async (req, res, next) => {
     }
 
     // Update last used timestamp
-    await query(
-      'UPDATE api_keys SET last_used = CURRENT_TIMESTAMP WHERE id = $1',
-      [keyData.id],
-    );
+    await query('UPDATE api_keys SET last_used = CURRENT_TIMESTAMP WHERE id = $1', [keyData.id]);
 
     // Attach API key info to request
     req.apiKey = {
@@ -243,7 +242,7 @@ const urlQuotaCheck = async (req, res, next) => {
     // Get user's current URL count
     const result = await query(
       'SELECT COUNT(*) as url_count FROM urls WHERE user_id = $1 AND is_active = true',
-      [req.user.id],
+      [req.user.id]
     );
 
     const currentCount = parseInt(result.rows[0].url_count);

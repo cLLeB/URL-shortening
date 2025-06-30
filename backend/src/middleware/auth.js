@@ -21,7 +21,7 @@ const authenticateToken = async (req, res, next) => {
     // Get user from database to ensure they still exist and are active
     const userResult = await query(
       'SELECT id, email, role, is_active, is_verified FROM users WHERE id = $1',
-      [decoded.userId],
+      [decoded.userId]
     );
 
     if (userResult.rows.length === 0) {
@@ -49,10 +49,7 @@ const authenticateToken = async (req, res, next) => {
     };
 
     // Update last login
-    await query(
-      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
-      [user.id],
-    );
+    await query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
 
     next();
   } catch (error) {
@@ -93,7 +90,7 @@ const optionalAuth = async (req, res, next) => {
 
     const userResult = await query(
       'SELECT id, email, role, is_active, is_verified FROM users WHERE id = $1',
-      [decoded.userId],
+      [decoded.userId]
     );
 
     if (userResult.rows.length > 0 && userResult.rows[0].is_active) {
@@ -116,7 +113,7 @@ const optionalAuth = async (req, res, next) => {
 };
 
 // Middleware to check if user has required role
-const requireRole = (roles) => {
+const requireRole = roles => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
@@ -190,10 +187,9 @@ const requireOwnership = (resourceIdParam = 'id', resourceTable = 'urls') => {
         return next();
       }
 
-      const result = await query(
-        `SELECT user_id FROM ${resourceTable} WHERE id = $1`,
-        [resourceId],
-      );
+      const result = await query(`SELECT user_id FROM ${resourceTable} WHERE id = $1`, [
+        resourceId,
+      ]);
 
       if (result.rows.length === 0) {
         return res.status(404).json({
@@ -229,24 +225,22 @@ const requireOwnership = (resourceIdParam = 'id', resourceTable = 'urls') => {
 };
 
 // Generate JWT token
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign(
-    { userId },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
-  );
+const generateTokens = userId => {
+  const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  });
 
   const refreshToken = jwt.sign(
     { userId, type: 'refresh' },
     process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d' },
+    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d' }
   );
 
   return { accessToken, refreshToken };
 };
 
 // Verify refresh token
-const verifyRefreshToken = (token) => {
+const verifyRefreshToken = token => {
   try {
     return jwt.verify(token, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
   } catch (error) {

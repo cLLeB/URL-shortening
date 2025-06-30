@@ -10,22 +10,13 @@ import { validatePassword } from '../utils';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const schema = yup.object({
-  firstName: yup
-    .string()
-    .optional()
-    .max(100, 'First name must be less than 100 characters'),
-  lastName: yup
-    .string()
-    .optional()
-    .max(100, 'Last name must be less than 100 characters'),
-  email: yup
-    .string()
-    .required('Email is required')
-    .email('Please enter a valid email address'),
+  firstName: yup.string().optional().max(100, 'First name must be less than 100 characters'),
+  lastName: yup.string().optional().max(100, 'Last name must be less than 100 characters'),
+  email: yup.string().required('Email is required').email('Please enter a valid email address'),
   password: yup
     .string()
     .required('Password is required')
-    .test('password-validation', 'Password requirements not met', (value) => {
+    .test('password-validation', 'Password requirements not met', value => {
       if (!value) return false;
       const validation = validatePassword(value);
       return validation.isValid;
@@ -65,169 +56,163 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className='min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8'>
+      <div className='max-w-md w-full space-y-8'>
         <div>
-          <div className="flex justify-center">
-            <LinkIcon className="h-12 w-12 text-primary-600" />
+          <div className='flex justify-center'>
+            <LinkIcon className='h-12 w-12 text-primary-600' />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+          <h2 className='mt-6 text-center text-3xl font-bold tracking-tight text-gray-900'>
             Create your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className='mt-2 text-center text-sm text-gray-600'>
             Or{' '}
-            <Link
-              to="/login"
-              className="font-medium text-primary-600 hover:text-primary-500"
-            >
+            <Link to='/login' className='font-medium text-primary-600 hover:text-primary-500'>
               sign in to your existing account
             </Link>
           </p>
         </div>
 
-        <div className="card">
-          <div className="card-body">
-            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div className='card'>
+          <div className='card-body'>
+            <form className='space-y-6' onSubmit={handleSubmit(onSubmit)}>
+              <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor='firstName' className='block text-sm font-medium text-gray-700'>
                     First name
                   </label>
-                  <div className="mt-1">
+                  <div className='mt-1'>
                     <input
                       {...register('firstName')}
-                      type="text"
-                      autoComplete="given-name"
+                      type='text'
+                      autoComplete='given-name'
                       className={`input ${errors.firstName ? 'input-error' : ''}`}
-                      placeholder="John"
+                      placeholder='John'
                     />
                     {errors.firstName && (
-                      <p className="mt-1 text-sm text-error-600">{errors.firstName.message}</p>
+                      <p className='mt-1 text-sm text-error-600'>{errors.firstName.message}</p>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor='lastName' className='block text-sm font-medium text-gray-700'>
                     Last name
                   </label>
-                  <div className="mt-1">
+                  <div className='mt-1'>
                     <input
                       {...register('lastName')}
-                      type="text"
-                      autoComplete="family-name"
+                      type='text'
+                      autoComplete='family-name'
                       className={`input ${errors.lastName ? 'input-error' : ''}`}
-                      placeholder="Doe"
+                      placeholder='Doe'
                     />
                     {errors.lastName && (
-                      <p className="mt-1 text-sm text-error-600">{errors.lastName.message}</p>
+                      <p className='mt-1 text-sm text-error-600'>{errors.lastName.message}</p>
                     )}
                   </div>
                 </div>
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor='email' className='block text-sm font-medium text-gray-700'>
                   Email address
                 </label>
-                <div className="mt-1">
+                <div className='mt-1'>
                   <input
                     {...register('email')}
-                    type="email"
-                    autoComplete="email"
+                    type='email'
+                    autoComplete='email'
                     className={`input ${errors.email ? 'input-error' : ''}`}
-                    placeholder="john@example.com"
+                    placeholder='john@example.com'
                   />
                   {errors.email && (
-                    <p className="mt-1 text-sm text-error-600">{errors.email.message}</p>
+                    <p className='mt-1 text-sm text-error-600'>{errors.email.message}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor='password' className='block text-sm font-medium text-gray-700'>
                   Password
                 </label>
-                <div className="mt-1 relative">
+                <div className='mt-1 relative'>
                   <input
                     {...register('password')}
                     type={showPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
+                    autoComplete='new-password'
                     className={`input pr-10 ${errors.password ? 'input-error' : ''}`}
-                    placeholder="Create a strong password"
+                    placeholder='Create a strong password'
                   />
                   <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    type='button'
+                    className='absolute inset-y-0 right-0 pr-3 flex items-center'
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                      <EyeSlashIcon className='h-5 w-5 text-gray-400' />
                     ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                      <EyeIcon className='h-5 w-5 text-gray-400' />
                     )}
                   </button>
                 </div>
-                
+
                 {/* Password requirements */}
                 {password && (
-                  <div className="mt-2 space-y-1">
+                  <div className='mt-2 space-y-1'>
                     {passwordValidation.errors.map((error, index) => (
-                      <p key={index} className="text-xs text-error-600">
+                      <p key={index} className='text-xs text-error-600'>
                         • {error}
                       </p>
                     ))}
                     {passwordValidation.isValid && (
-                      <p className="text-xs text-success-600">
-                        • Password meets all requirements
-                      </p>
+                      <p className='text-xs text-success-600'>• Password meets all requirements</p>
                     )}
                   </div>
                 )}
-                
+
                 {errors.password && (
-                  <p className="mt-1 text-sm text-error-600">{errors.password.message}</p>
+                  <p className='mt-1 text-sm text-error-600'>{errors.password.message}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor='confirmPassword'
+                  className='block text-sm font-medium text-gray-700'
+                >
                   Confirm password
                 </label>
-                <div className="mt-1 relative">
+                <div className='mt-1 relative'>
                   <input
                     {...register('confirmPassword')}
                     type={showConfirmPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
+                    autoComplete='new-password'
                     className={`input pr-10 ${errors.confirmPassword ? 'input-error' : ''}`}
-                    placeholder="Confirm your password"
+                    placeholder='Confirm your password'
                   />
                   <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    type='button'
+                    className='absolute inset-y-0 right-0 pr-3 flex items-center'
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                      <EyeSlashIcon className='h-5 w-5 text-gray-400' />
                     ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                      <EyeIcon className='h-5 w-5 text-gray-400' />
                     )}
                   </button>
                   {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-error-600">{errors.confirmPassword.message}</p>
+                    <p className='mt-1 text-sm text-error-600'>{errors.confirmPassword.message}</p>
                   )}
                 </div>
               </div>
 
               <div>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="btn-primary w-full"
-                >
+                <button type='submit' disabled={isLoading} className='btn-primary w-full'>
                   {isLoading ? (
                     <>
-                      <LoadingSpinner size="sm" color="white" className="mr-2" />
+                      <LoadingSpinner size='sm' color='white' className='mr-2' />
                       Creating account...
                     </>
                   ) : (
@@ -236,13 +221,13 @@ const RegisterPage: React.FC = () => {
                 </button>
               </div>
 
-              <div className="text-xs text-gray-500 text-center">
+              <div className='text-xs text-gray-500 text-center'>
                 By creating an account, you agree to our{' '}
-                <a href="#" className="text-primary-600 hover:text-primary-500">
+                <a href='#' className='text-primary-600 hover:text-primary-500'>
                   Terms of Service
                 </a>{' '}
                 and{' '}
-                <a href="#" className="text-primary-600 hover:text-primary-500">
+                <a href='#' className='text-primary-600 hover:text-primary-500'>
                   Privacy Policy
                 </a>
                 .
@@ -251,11 +236,8 @@ const RegisterPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="text-center">
-          <Link
-            to="/"
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
+        <div className='text-center'>
+          <Link to='/' className='text-sm text-gray-600 hover:text-gray-900'>
             ← Back to home
           </Link>
         </div>

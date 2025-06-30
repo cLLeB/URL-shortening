@@ -19,7 +19,7 @@ const passwordSchema = yup.object({
   newPassword: yup
     .string()
     .required('New password is required')
-    .test('password-validation', 'Password requirements not met', (value) => {
+    .test('password-validation', 'Password requirements not met', value => {
       if (!value) return false;
       const validation = validatePassword(value);
       return validation.isValid;
@@ -61,7 +61,9 @@ const ProfilePage: React.FC = () => {
   });
 
   const newPassword = watch('newPassword');
-  const passwordValidation = newPassword ? validatePassword(newPassword) : { isValid: false, errors: [] };
+  const passwordValidation = newPassword
+    ? validatePassword(newPassword)
+    : { isValid: false, errors: [] };
 
   const onProfileSubmit = async (data: any) => {
     setIsUpdatingProfile(true);
@@ -90,86 +92,87 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className='space-y-8'>
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
-        <p className="text-gray-600">Manage your account information and security settings</p>
+        <h1 className='text-2xl font-bold text-gray-900'>Profile Settings</h1>
+        <p className='text-gray-600'>Manage your account information and security settings</p>
       </div>
 
       {/* Profile Information */}
-      <div className="card">
-        <div className="card-header">
-          <h3 className="text-lg font-medium text-gray-900">Profile Information</h3>
+      <div className='card'>
+        <div className='card-header'>
+          <h3 className='text-lg font-medium text-gray-900'>Profile Information</h3>
         </div>
-        <div className="card-body">
-          <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-6">
+        <div className='card-body'>
+          <form onSubmit={handleProfileSubmit(onProfileSubmit)} className='space-y-6'>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor='email' className='block text-sm font-medium text-gray-700'>
                 Email address
               </label>
               <input
-                type="email"
+                type='email'
                 value={user?.email || ''}
                 disabled
-                className="input bg-gray-50 cursor-not-allowed"
+                className='input bg-gray-50 cursor-not-allowed'
               />
-              <p className="mt-1 text-sm text-gray-500">
+              <p className='mt-1 text-sm text-gray-500'>
                 Email address cannot be changed. Contact support if you need to update it.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                <label htmlFor='firstName' className='block text-sm font-medium text-gray-700'>
                   First name
                 </label>
                 <input
                   {...registerProfile('firstName')}
-                  type="text"
+                  type='text'
                   className={`input ${profileErrors.firstName ? 'input-error' : ''}`}
-                  placeholder="Enter your first name"
+                  placeholder='Enter your first name'
                 />
                 {profileErrors.firstName && (
-                  <p className="mt-1 text-sm text-error-600">{profileErrors.firstName.message}</p>
+                  <p className='mt-1 text-sm text-error-600'>{profileErrors.firstName.message}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                <label htmlFor='lastName' className='block text-sm font-medium text-gray-700'>
                   Last name
                 </label>
                 <input
                   {...registerProfile('lastName')}
-                  type="text"
+                  type='text'
                   className={`input ${profileErrors.lastName ? 'input-error' : ''}`}
-                  placeholder="Enter your last name"
+                  placeholder='Enter your last name'
                 />
                 {profileErrors.lastName && (
-                  <p className="mt-1 text-sm text-error-600">{profileErrors.lastName.message}</p>
+                  <p className='mt-1 text-sm text-error-600'>{profileErrors.lastName.message}</p>
                 )}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Account Role</label>
-              <span className={`badge ${
-                user?.role === 'admin' ? 'badge-error' : 
-                user?.role === 'premium' ? 'badge-warning' : 'badge-primary'
-              } mt-1`}>
-                {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}
+              <label className='block text-sm font-medium text-gray-700'>Account Role</label>
+              <span
+                className={`badge ${
+                  user?.role === 'admin'
+                    ? 'badge-error'
+                    : user?.role === 'premium'
+                      ? 'badge-warning'
+                      : 'badge-primary'
+                } mt-1`}
+              >
+                {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ''}
               </span>
             </div>
 
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={isUpdatingProfile}
-                className="btn-primary"
-              >
+            <div className='flex justify-end'>
+              <button type='submit' disabled={isUpdatingProfile} className='btn-primary'>
                 {isUpdatingProfile ? (
                   <>
-                    <LoadingSpinner size="sm" color="white" className="mr-2" />
+                    <LoadingSpinner size='sm' color='white' className='mr-2' />
                     Updating...
                   </>
                 ) : (
@@ -182,122 +185,120 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Change Password */}
-      <div className="card">
-        <div className="card-header">
-          <h3 className="text-lg font-medium text-gray-900">Change Password</h3>
+      <div className='card'>
+        <div className='card-header'>
+          <h3 className='text-lg font-medium text-gray-900'>Change Password</h3>
         </div>
-        <div className="card-body">
-          <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-6">
+        <div className='card-body'>
+          <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className='space-y-6'>
             <div>
-              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
+              <label htmlFor='currentPassword' className='block text-sm font-medium text-gray-700'>
                 Current password
               </label>
-              <div className="mt-1 relative">
+              <div className='mt-1 relative'>
                 <input
                   {...registerPassword('currentPassword')}
                   type={showCurrentPassword ? 'text' : 'password'}
                   className={`input pr-10 ${passwordErrors.currentPassword ? 'input-error' : ''}`}
-                  placeholder="Enter your current password"
+                  placeholder='Enter your current password'
                 />
                 <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  type='button'
+                  className='absolute inset-y-0 right-0 pr-3 flex items-center'
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 >
                   {showCurrentPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                    <EyeSlashIcon className='h-5 w-5 text-gray-400' />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400" />
+                    <EyeIcon className='h-5 w-5 text-gray-400' />
                   )}
                 </button>
                 {passwordErrors.currentPassword && (
-                  <p className="mt-1 text-sm text-error-600">{passwordErrors.currentPassword.message}</p>
+                  <p className='mt-1 text-sm text-error-600'>
+                    {passwordErrors.currentPassword.message}
+                  </p>
                 )}
               </div>
             </div>
 
             <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+              <label htmlFor='newPassword' className='block text-sm font-medium text-gray-700'>
                 New password
               </label>
-              <div className="mt-1 relative">
+              <div className='mt-1 relative'>
                 <input
                   {...registerPassword('newPassword')}
                   type={showNewPassword ? 'text' : 'password'}
                   className={`input pr-10 ${passwordErrors.newPassword ? 'input-error' : ''}`}
-                  placeholder="Enter your new password"
+                  placeholder='Enter your new password'
                 />
                 <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  type='button'
+                  className='absolute inset-y-0 right-0 pr-3 flex items-center'
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >
                   {showNewPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                    <EyeSlashIcon className='h-5 w-5 text-gray-400' />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400" />
+                    <EyeIcon className='h-5 w-5 text-gray-400' />
                   )}
                 </button>
               </div>
-              
+
               {/* Password requirements */}
               {newPassword && (
-                <div className="mt-2 space-y-1">
+                <div className='mt-2 space-y-1'>
                   {passwordValidation.errors.map((error, index) => (
-                    <p key={index} className="text-xs text-error-600">
+                    <p key={index} className='text-xs text-error-600'>
                       • {error}
                     </p>
                   ))}
                   {passwordValidation.isValid && (
-                    <p className="text-xs text-success-600">
-                      • Password meets all requirements
-                    </p>
+                    <p className='text-xs text-success-600'>• Password meets all requirements</p>
                   )}
                 </div>
               )}
-              
+
               {passwordErrors.newPassword && (
-                <p className="mt-1 text-sm text-error-600">{passwordErrors.newPassword.message}</p>
+                <p className='mt-1 text-sm text-error-600'>{passwordErrors.newPassword.message}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label htmlFor='confirmPassword' className='block text-sm font-medium text-gray-700'>
                 Confirm new password
               </label>
-              <div className="mt-1 relative">
+              <div className='mt-1 relative'>
                 <input
                   {...registerPassword('confirmPassword')}
                   type={showConfirmPassword ? 'text' : 'password'}
                   className={`input pr-10 ${passwordErrors.confirmPassword ? 'input-error' : ''}`}
-                  placeholder="Confirm your new password"
+                  placeholder='Confirm your new password'
                 />
                 <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  type='button'
+                  className='absolute inset-y-0 right-0 pr-3 flex items-center'
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                    <EyeSlashIcon className='h-5 w-5 text-gray-400' />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400" />
+                    <EyeIcon className='h-5 w-5 text-gray-400' />
                   )}
                 </button>
                 {passwordErrors.confirmPassword && (
-                  <p className="mt-1 text-sm text-error-600">{passwordErrors.confirmPassword.message}</p>
+                  <p className='mt-1 text-sm text-error-600'>
+                    {passwordErrors.confirmPassword.message}
+                  </p>
                 )}
               </div>
             </div>
 
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={isChangingPassword}
-                className="btn-primary"
-              >
+            <div className='flex justify-end'>
+              <button type='submit' disabled={isChangingPassword} className='btn-primary'>
                 {isChangingPassword ? (
                   <>
-                    <LoadingSpinner size="sm" color="white" className="mr-2" />
+                    <LoadingSpinner size='sm' color='white' className='mr-2' />
                     Changing...
                   </>
                 ) : (
@@ -310,36 +311,36 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* Account Information */}
-      <div className="card">
-        <div className="card-header">
-          <h3 className="text-lg font-medium text-gray-900">Account Information</h3>
+      <div className='card'>
+        <div className='card-header'>
+          <h3 className='text-lg font-medium text-gray-900'>Account Information</h3>
         </div>
-        <div className="card-body">
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+        <div className='card-body'>
+          <dl className='grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2'>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Member since</dt>
-              <dd className="mt-1 text-sm text-gray-900">
+              <dt className='text-sm font-medium text-gray-500'>Member since</dt>
+              <dd className='mt-1 text-sm text-gray-900'>
                 {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Last login</dt>
-              <dd className="mt-1 text-sm text-gray-900">
+              <dt className='text-sm font-medium text-gray-500'>Last login</dt>
+              <dd className='mt-1 text-sm text-gray-900'>
                 {user?.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'N/A'}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Email verified</dt>
-              <dd className="mt-1">
+              <dt className='text-sm font-medium text-gray-500'>Email verified</dt>
+              <dd className='mt-1'>
                 <span className={`badge ${user?.isVerified ? 'badge-success' : 'badge-warning'}`}>
                   {user?.isVerified ? 'Verified' : 'Not verified'}
                 </span>
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Account status</dt>
-              <dd className="mt-1">
-                <span className="badge badge-success">Active</span>
+              <dt className='text-sm font-medium text-gray-500'>Account status</dt>
+              <dd className='mt-1'>
+                <span className='badge badge-success'>Active</span>
               </dd>
             </div>
           </dl>

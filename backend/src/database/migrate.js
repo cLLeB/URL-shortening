@@ -31,9 +31,11 @@ async function runMigrations() {
       } catch (error) {
         // Some statements might fail if they already exist (like CREATE TABLE IF NOT EXISTS)
         // We'll log warnings for these but continue
-        if (error.message.includes('already exists') ||
-            error.message.includes('duplicate key') ||
-            error.message.includes('relation') && error.message.includes('already exists')) {
+        if (
+          error.message.includes('already exists') ||
+          error.message.includes('duplicate key') ||
+          (error.message.includes('relation') && error.message.includes('already exists'))
+        ) {
           logger.warn(`Migration statement ${i + 1} skipped (already exists): ${error.message}`);
         } else {
           logger.error(`Migration statement ${i + 1} failed:`, error);
@@ -62,7 +64,6 @@ async function runMigrations() {
       tablesCreated: tables,
       statementsExecuted: statements.length,
     };
-
   } catch (error) {
     logger.error('Database migration failed:', error);
     throw error;
@@ -106,10 +107,7 @@ async function createAdminUser() {
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
 
     // Check if admin user already exists
-    const existingAdmin = await query(
-      'SELECT id FROM users WHERE email = $1',
-      [adminEmail],
-    );
+    const existingAdmin = await query('SELECT id FROM users WHERE email = $1', [adminEmail]);
 
     if (existingAdmin.rows.length > 0) {
       logger.info('Admin user already exists');
@@ -120,25 +118,19 @@ async function createAdminUser() {
     const passwordHash = await bcrypt.hash(adminPassword, 12);
 
     // Create admin user
-    const result = await query(`
+    const result = await query(
+      `
       INSERT INTO users (email, password_hash, first_name, last_name, role, is_verified, is_active)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id, email, role
-    `, [
-      adminEmail,
-      passwordHash,
-      'System',
-      'Administrator',
-      'admin',
-      true,
-      true,
-    ]);
+    `,
+      [adminEmail, passwordHash, 'System', 'Administrator', 'admin', true, true]
+    );
 
     logger.info(`Admin user created: ${adminEmail}`);
     logger.warn(`Default admin password: ${adminPassword} - CHANGE THIS IN PRODUCTION!`);
 
     return result.rows[0];
-
   } catch (error) {
     logger.error('Failed to create admin user:', error);
     throw error;
@@ -159,19 +151,15 @@ async function seedSampleData() {
     const bcrypt = require('bcryptjs');
     const samplePassword = await bcrypt.hash('password123', 12);
 
-    const sampleUser = await query(`
+    const sampleUser = await query(
+      `
       INSERT INTO users (email, password_hash, first_name, last_name, is_verified, is_active)
       VALUES ($1, $2, $3, $4, $5, $6)
       ON CONFLICT (email) DO NOTHING
       RETURNING id
-    `, [
-      'user@example.com',
-      samplePassword,
-      'John',
-      'Doe',
-      true,
-      true,
-    ]);
+    `,
+      ['user@example.com', samplePassword, 'John', 'Doe', true, true]
+    );
 
     if (sampleUser.rows.length > 0) {
       const userId = sampleUser.rows[0].id;
@@ -196,23 +184,18 @@ async function seedSampleData() {
       ];
 
       for (const url of sampleUrls) {
-        await query(`
+        await query(
+          `
           INSERT INTO urls (user_id, original_url, short_code, title, is_active, is_public)
           VALUES ($1, $2, $3, $4, $5, $6)
           ON CONFLICT (short_code) DO NOTHING
-        `, [
-          userId,
-          url.original_url,
-          url.short_code,
-          url.title,
-          true,
-          true,
-        ]);
+        `,
+          [userId, url.original_url, url.short_code, url.title, true, true]
+        );
       }
 
       logger.info('Sample data seeded successfully');
     }
-
   } catch (error) {
     logger.error('Failed to seed sample data:', error);
     // Don't throw error for seeding failures
@@ -241,7 +224,6 @@ async function migrate() {
     }
 
     logger.info('Database setup completed successfully');
-
   } catch (error) {
     logger.error('Database setup failed:', error);
     process.exit(1);
@@ -250,12 +232,14 @@ async function migrate() {
 
 // Run migrations if this file is executed directly
 if (require.main === module) {
-  migrate().then(() => {
-    process.exit(0);
-  }).catch((error) => {
-    logger.error('Migration failed:', error);
-    process.exit(1);
-  });
+  migrate()
+    .then(() => {
+      process.exit(0);
+    })
+    .catch(error => {
+      logger.error('Migration failed:', error);
+      process.exit(1);
+    });
 }
 
 module.exports = {
