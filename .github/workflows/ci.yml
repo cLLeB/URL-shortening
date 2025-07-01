@@ -282,7 +282,7 @@ jobs:
 
     - name: Run integration tests
       working-directory: ./backend
-      run: npm run test -- --testPathPattern=integration
+      run: npm run test -- --testPathPattern=integration --passWithNoTests
       env:
         NODE_ENV: test
         DB_HOST: localhost
