@@ -95,7 +95,7 @@ jobs:
 
     - name: Upload backend coverage reports
       if: always()
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         file: ./backend/coverage/lcov.info
         flags: backend
@@ -154,7 +154,7 @@ jobs:
 
     - name: Upload frontend coverage reports
       if: always()
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         file: ./frontend/coverage/lcov.info
         flags: frontend
