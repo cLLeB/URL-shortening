@@ -29,7 +29,11 @@ const AnalyticsPage: React.FC = () => {
       const [urlsData, analyticsData, topUrlsData] = await Promise.all([
         apiService.getUrls({ limit: 50, sortBy: 'click_count', sortOrder: 'DESC' }),
         apiService.getUserAnalytics(timeRange),
-        apiService.getTopUrls({ timeRange: timeRange as '24h' | '7d' | '30d' | '90d' | '1y', limit: 10, sortBy: 'clicks' }),
+        apiService.getTopUrls({
+          timeRange: timeRange as '24h' | '7d' | '30d' | '90d' | '1y',
+          limit: 10,
+          sortBy: 'clicks',
+        }),
       ]);
 
       setUrls(urlsData.urls);
