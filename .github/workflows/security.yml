@@ -116,7 +116,7 @@ jobs:
       run: docker build -t url-shortener-frontend:latest ./frontend
 
     - name: Run Trivy vulnerability scanner on backend
-      uses: aquasecurity/trivy-action@0.28.0
+      uses: aquasecurity/trivy-action@0.33.0
       with:
         image-ref: 'url-shortener-backend:latest'
         format: 'sarif'
@@ -124,7 +124,7 @@ jobs:
       continue-on-error: true
 
     - name: Run Trivy vulnerability scanner on frontend
-      uses: aquasecurity/trivy-action@0.28.0
+      uses: aquasecurity/trivy-action@0.33.0
       with:
         image-ref: 'url-shortener-frontend:latest'
         format: 'sarif'
