@@ -49,10 +49,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: ${{ env.NODE_VERSION }}
         # Disable caching since we're doing fresh installs
@@ -110,10 +110,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: ${{ env.NODE_VERSION }}
         # Disable caching since we're doing fresh installs
@@ -169,10 +169,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: ${{ env.NODE_VERSION }}
 
@@ -209,7 +209,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -245,7 +245,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Start services with Docker Compose
       run: |
@@ -253,7 +253,7 @@ jobs:
         sleep 30
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version: ${{ env.NODE_VERSION }}
 
@@ -310,7 +310,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Deploy notification
       run: |
