@@ -1,5 +1,5 @@
 # Multi-stage build for production
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -18,7 +18,7 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:25-alpine AS production
 
 # Install curl for health checks
 RUN apk add --no-cache curl
