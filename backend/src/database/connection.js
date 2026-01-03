@@ -5,7 +5,7 @@ let pool;
 
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
+  port: parseInt(process.env.DB_PORT, 10) || 5432,
   database: process.env.DB_NAME || 'url_shortener',
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD,
@@ -18,6 +18,20 @@ const dbConfig = {
 
 async function connectDatabase() {
   try {
+    // Validate database password
+    if (typeof dbConfig.password === 'undefined' || dbConfig.password === null) {
+      throw new Error('Database password (DB_PASSWORD) is not set. Please set DB_PASSWORD in your environment.');
+    }
+
+    if (typeof dbConfig.password !== 'string') {
+      // Attempt to coerce to string if possible
+      try {
+        dbConfig.password = String(dbConfig.password);
+      } catch (e) {
+        throw new Error('Database password (DB_PASSWORD) must be a string.');
+      }
+    }
+
     pool = new Pool(dbConfig);
 
     // Test the connection

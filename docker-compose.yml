@@ -11,7 +11,7 @@ services:
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./backend/database/init.sql/:/docker-entrypoint-initdb.d/:ro
     ports:
       - "5432:5432"
     networks:
@@ -146,50 +146,3 @@ volumes:
 networks:
   url-shortener-network:
     driver: bridge
-
-# Development override
-# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
----
-# docker-compose.dev.yml
-version: '3.8'
-
-services:
-  postgres:
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_PASSWORD: postgres
-
-  redis:
-    ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    environment:
-      NODE_ENV: development
-      DB_PASSWORD: postgres
-      REDIS_PASSWORD: ""
-      LOG_LEVEL: debug
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    command: npm run dev
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    environment:
-      REACT_APP_API_URL: http://localhost:5000/api
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm start
-
-  nginx:
-    profiles:
-      - never  # Disable nginx in development

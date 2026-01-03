@@ -7,14 +7,14 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com/)
 
-A professional, enterprise-grade URL shortening service built with modern technologies and best practices. This project demonstrates full-stack development expertise, comprehensive testing, security implementation, and production-ready deployment configurations.
+A robust, intermediate-level URL shortening service built with modern technologies and best practices. This project demonstrates full-stack development expertise, comprehensive testing, and security implementation, suitable for a college-level capstone or portfolio project.
 
 ## 🚀 Features
 
 ### Core Functionality
 - **URL Shortening**: Create short URLs with automatic short code generation
 - **Custom Aliases**: Support for user-defined custom aliases with validation
-- **User Authentication**: Complete JWT-based authentication with refresh tokens
+- **User Authentication**: Complete JWT-based authentication (Auto-verified for easy testing)
 - **Analytics Dashboard**: Comprehensive click tracking and real-time analytics
 - **URL Management**: Full CRUD operations with bulk operations support
 - **Advanced Search**: Filter and search URLs with multiple criteria
@@ -22,7 +22,7 @@ A professional, enterprise-grade URL shortening service built with modern techno
 ### Advanced Features
 - **Geographic Analytics**: Track clicks by country, region, and city
 - **Device Detection**: Identify device types, browsers, and operating systems
-- **Bot Detection**: Advanced bot filtering with machine learning
+- **Bot Detection**: Bot filtering with pattern matching
 - **Time-based Analytics**: Historical data analysis with trend visualization
 - **Export Functionality**: Download analytics data in multiple formats (CSV, JSON, PDF)
 - **Rate Limiting**: Intelligent rate limiting with user-based quotas
@@ -182,7 +182,7 @@ npm run lint               # Code quality checks
 
 1. **Build and deploy**
    ```bash
-   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+   docker-compose -f docker-compose.yml up -d
    ```
 
 2. **Setup SSL (recommended)**
@@ -191,13 +191,28 @@ npm run lint               # Code quality checks
    # Update nginx configuration for HTTPS
    ```
 
-### Cloud Deployment
+### Testing & Access
 
-The application is ready for deployment on:
-- **AWS** (ECS, EKS, Elastic Beanstalk)
-- **Azure** (Container Instances, AKS)
-- **Google Cloud** (Cloud Run, GKE)
-- **DigitalOcean** (App Platform, Kubernetes)
+To test the application and share it with others without a full cloud deployment, you can use tunneling services.
+
+#### Using ngrok (Recommended for quick sharing)
+
+1.  **Start the application locally** (using Docker or npm).
+2.  **Install ngrok**: Download from [ngrok.com](https://ngrok.com/).
+3.  **Expose the frontend**:
+    ```bash
+    ngrok http 3000
+    ```
+4.  **Share the URL**: Send the generated `https://....ngrok-free.app` link to friends or open it on your mobile device.
+
+*Note: For the backend API to work correctly with the frontend via ngrok, you may need to update the `REACT_APP_API_URL` in your frontend `.env` to point to the backend's ngrok URL if you expose that as well, or ensure your local network allows the connection.*
+
+#### Local Network Access
+
+To access from your phone on the same WiFi:
+1.  Find your computer's local IP address (e.g., `ipconfig` on Windows or `ifconfig` on Mac/Linux).
+2.  Open your phone's browser and go to `http://YOUR_LOCAL_IP:3000`.
+
 - **Heroku** (with add-ons)
 
 See the [Deployment Guide](docs/DEPLOYMENT.md) for platform-specific instructions.

@@ -1,0 +1,42 @@
+{
+  "auth": [
+    {
+      "id": 1,
+      "email": "user@example.com",
+      "password": "password",
+      "firstName": "Demo",
+      "lastName": "User",
+      "role": "user",
+      "accessToken": "demo-access-token"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "email": "user@example.com",
+      "firstName": "Demo",
+      "lastName": "User",
+      "role": "user"
+    }
+  ],
+  "urls": [
+    {
+      "id": 1,
+      "shortCode": "abc123",
+      "originalUrl": "https://example.com",
+      "title": "Example Site",
+      "description": "An example URL",
+      "click_count": 42,
+      "isActive": true,
+      "created_at": "2025-01-01T00:00:00.000Z"
+    }
+  ],
+  "analytics": [
+    {
+      "id": 1,
+      "urlId": 1,
+      "clicks": 42,
+      "lastClickAt": "2025-08-01T12:00:00.000Z"
+    }
+  ]
+}

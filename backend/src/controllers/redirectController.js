@@ -4,7 +4,7 @@ const { redirectLimiter } = require('../middleware/rateLimiter');
 const logger = require('../utils/logger');
 
 // Handle URL redirects
-const handleRedirect = async (req, res) => {
+const redirect = async (req, res) => {
   try {
     const { shortCode } = req.params;
 
@@ -243,4 +243,6 @@ const _generateQRCode = async (req, res) => {
 };
 */
 
-module.exports = handleRedirect;
+module.exports = {
+  redirect,
+};

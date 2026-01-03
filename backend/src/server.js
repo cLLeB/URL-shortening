@@ -8,8 +8,8 @@ require('dotenv').config();
 const { connectDatabase } = require('./database/connection');
 const { connectRedis } = require('./config/redis');
 const logger = require('./utils/logger');
-const errorHandler = require('./middleware/errorHandler');
-const rateLimiter = require('./middleware/rateLimiter');
+const { errorHandler } = require('./middleware/errorHandler');
+const rateLimiters = require('./middleware/rateLimiter');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -59,7 +59,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Rate limiting
-app.use(rateLimiter);
+app.use(rateLimiters.generalLimiter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -118,7 +118,9 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // URL redirect handler (must be after API routes)
-app.get('/:shortCode', require('./controllers/redirectController'));
+const redirectController = require('./controllers/redirectController');
+app.get('/:shortCode', redirectController.redirect);
+
 
 // 404 handler
 app.use('*', (req, res) => {

@@ -42,7 +42,7 @@ class AuthService {
           passwordHash,
           firstName || null,
           lastName || null,
-          false, // Email verification required
+          true, // Auto-verify for intermediate version (skip email check)
           true,
         ]
       );

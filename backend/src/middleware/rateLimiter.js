@@ -59,7 +59,7 @@ const generalLimiter = rateLimit({
     // Skip rate limiting for admin users
     return req.user && req.user.role === 'admin';
   },
-  onLimitReached: (req, res, options) => {
+  handler: (req, res, next, options) => {
     logger.logSecurityEvent('Rate limit exceeded', {
       ip: req.ip,
       userId: req.user?.id,
@@ -68,6 +68,7 @@ const generalLimiter = rateLimit({
       limit: options.max,
       windowMs: options.windowMs,
     });
+    res.status(options.statusCode).send(options.message);
   },
 });
 
@@ -84,13 +85,14 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   store: createRedisStore('auth'),
   keyGenerator: req => `auth:${req.ip}`,
-  onLimitReached: (req, res, options) => {
+  handler: (req, res, next, options) => {
     logger.logSecurityEvent('Authentication rate limit exceeded', {
       ip: req.ip,
       userAgent: req.get('User-Agent'),
       endpoint: req.originalUrl,
       body: req.body?.email ? { email: req.body.email } : undefined,
     });
+    res.status(options.statusCode).send(options.message);
   },
 });
 
@@ -124,7 +126,7 @@ const urlCreationLimiter = rateLimit({
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
   delayAfter: 50, // allow 50 requests per 15 minutes, then...
-  delayMs: 500, // begin adding 500ms of delay per request above 50
+  delayMs: () => 500, // begin adding 500ms of delay per request above 50
   maxDelayMs: 20000, // maximum delay of 20 seconds
   store: createRedisStore('slow'),
   keyGenerator: req => {

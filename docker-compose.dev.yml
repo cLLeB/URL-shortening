@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: url-shortener-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: url_shortener
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database/init.sql/:/docker-entrypoint-initdb.d/:ro
+    networks:
+      - url-shortener-network
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: url-shortener-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - url-shortener-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: url-shortener-backend-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: url_shortener
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      LOG_LEVEL: debug
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "5000:5000"
+    networks:
+      - url-shortener-network
+    depends_on:
+      - postgres
+      - redis
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: url-shortener-frontend-dev
+    restart: unless-stopped
+    environment:
+      REACT_APP_API_URL: http://localhost:5000/api
+      REACT_APP_BASE_URL: http://localhost:3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - url-shortener-network
+    depends_on:
+      - backend
+    command: npm start
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  url-shortener-network:
+    driver: bridge

@@ -113,73 +113,68 @@ const logWithContext = (level, message, context = {}) => {
 };
 
 // Enhanced logging methods
-const enhancedLogger = {
-  ...logger,
+logger.logRequest = (req, res, responseTime) => {
+  const logData = {
+    method: req.method,
+    url: req.originalUrl,
+    statusCode: res.statusCode,
+    responseTime: `${responseTime}ms`,
+    userAgent: req.get('User-Agent'),
+    ip: req.ip,
+    userId: req.user?.id,
+  };
 
-  // Request logging
-  logRequest: (req, res, responseTime) => {
-    const logData = {
-      method: req.method,
-      url: req.originalUrl,
-      statusCode: res.statusCode,
-      responseTime: `${responseTime}ms`,
-      userAgent: req.get('User-Agent'),
-      ip: req.ip,
-      userId: req.user?.id,
-    };
-
-    if (res.statusCode >= 400) {
-      logger.warn('HTTP Request', logData);
-    } else {
-      logger.info('HTTP Request', logData);
-    }
-  },
-
-  // Database operation logging
-  logDbOperation: (operation, table, duration, rowCount) => {
-    logWithContext('debug', `Database ${operation}`, {
-      table,
-      duration: `${duration}ms`,
-      rowCount,
-      category: 'database',
-    });
-  },
-
-  // Cache operation logging
-  logCacheOperation: (operation, key, hit = null) => {
-    logWithContext('debug', `Cache ${operation}`, {
-      key: key.substring(0, 50) + (key.length > 50 ? '...' : ''),
-      hit,
-      category: 'cache',
-    });
-  },
-
-  // Security event logging
-  logSecurityEvent: (event, details = {}) => {
-    logWithContext('warn', `Security Event: ${event}`, {
-      ...details,
-      category: 'security',
-      severity: 'high',
-    });
-  },
-
-  // Business logic logging
-  logBusinessEvent: (event, details = {}) => {
-    logWithContext('info', `Business Event: ${event}`, {
-      ...details,
-      category: 'business',
-    });
-  },
-
-  // Performance logging
-  logPerformance: (operation, duration, details = {}) => {
-    const level = duration > 1000 ? 'warn' : 'info';
-    logWithContext(level, `Performance: ${operation}`, {
-      duration: `${duration}ms`,
-      ...details,
-      category: 'performance',
-    });
-  },
+  if (res.statusCode >= 400) {
+    logger.warn('HTTP Request', logData);
+  } else {
+    logger.info('HTTP Request', logData);
+  }
 };
 
-module.exports = enhancedLogger;
+// Database operation logging
+logger.logDbOperation = (operation, table, duration, rowCount) => {
+  logWithContext('debug', `Database ${operation}`, {
+    table,
+    duration: `${duration}ms`,
+    rowCount,
+    category: 'database',
+  });
+};
+
+// Cache operation logging
+logger.logCacheOperation = (operation, key, hit = null) => {
+  logWithContext('debug', `Cache ${operation}`, {
+    key: key.substring(0, 50) + (key.length > 50 ? '...' : ''),
+    hit,
+    category: 'cache',
+  });
+};
+
+// Security event logging
+logger.logSecurityEvent = (event, details = {}) => {
+  logWithContext('warn', `Security Event: ${event}`, {
+    ...details,
+    category: 'security',
+    severity: 'high',
+  });
+};
+
+// Business logic logging
+logger.logBusinessEvent = (event, details = {}) => {
+  logWithContext('info', `Business Event: ${event}`, {
+    ...details,
+    category: 'business',
+  });
+};
+
+// Performance logging
+logger.logPerformance = (operation, duration, details = {}) => {
+  const level = duration > 1000 ? 'warn' : 'info';
+  logWithContext(level, `Performance: ${operation}`, {
+    duration: `${duration}ms`,
+    ...details,
+    category: 'performance',
+  });
+};
+
+module.exports = logger;
